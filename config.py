@@ -11,6 +11,7 @@ TOKEN_TTL_BROADCAST = 300  # 5 minutes for posts
 
 # Avatars
 DEFAULT_AVATAR_TYPE = "none"
+MAX_AVATAR_SIZE = 20 * 1024 #20 KB
 
 # Display / Debug
-VERBOSE = True
+VERBOSE = False

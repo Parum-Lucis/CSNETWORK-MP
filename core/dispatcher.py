@@ -3,7 +3,6 @@ from handlers.post_handler import handle_post
 from handlers.direct_message_handler import handle_dm
 from utils.printer import verbose_log
 
-
 def parse_message(message: str) -> dict:
     """
     Parses a raw LSNP key-valye message string into a dictionary with the format KEY: VALUE.

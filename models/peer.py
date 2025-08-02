@@ -1,3 +1,4 @@
+from config import DEFAULT_AVATAR_TYPE
 class Profile:
     """
     a peer in the LSNP network.
@@ -19,7 +20,7 @@ class Profile:
         self.display_name = display_name or user_id
         self.status = status or ""
         self.avatar_type = avatar_type
-        self.avatar_data = avatar_data
+        self.avatar_data = avatar_data | DEFAULT_AVATAR_TYPE
 
     def to_dict(self):
         """

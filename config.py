@@ -5,7 +5,7 @@ PORT = 50999              # UDP port for LSNP communication
 BROADCAST_INTERVAL = 300  # Seconds between PROFILE broadcasts; 5 MINUTES
 BUFFER_SIZE = 1024        # Max bytes to receive in a UDP packet; 1 KB
 
-# Token defaults
+# Token defaults; no clue where this is used
 TOKEN_TTL_CHAT = 600       # 10 minutes for direct messages
 TOKEN_TTL_BROADCAST = 300  # 5 minutes for posts
 

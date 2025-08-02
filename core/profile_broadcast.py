@@ -3,8 +3,7 @@ import time
 from models.peer import Profile
 from core.udp_broadcast import UDPListener
 from utils.printer import verbose_log
-
-BROADCAST_INTERVAL = 300
+from config import BROADCAST_INTERVAL
 
 def start_broadcast(local_profile: Profile, udp_sender: UDPListener):
     """

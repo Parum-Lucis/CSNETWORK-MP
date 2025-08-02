@@ -1,5 +1,6 @@
 import socket
 import threading
+from config import BUFFER_SIZE
 
 class UDPListener:
     """
@@ -31,7 +32,7 @@ class UDPListener:
         def listener():
             while True:
                     try:
-                        data, addr = self.sock.recvfrom(1024)
+                        data, addr = self.sock.recvfrom(BUFFER_SIZE)
                         message = data.decode('utf-8'  , errors='ignore')
                         on_message_callback(message, addr)
                     except Exception as e:
@@ -44,7 +45,7 @@ class UDPListener:
         UDP broadcast to all peers on the local network.
 
         Args:
-            message (str): The LSNP-formatted message to send.
+            message (str): The LSNP-formatted message to send; TODO change
         """
         self.sock.sendto(message.encode('utf-8'), ('255.255.255.255', self.port))
 

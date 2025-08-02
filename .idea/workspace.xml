@@ -4,35 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="s">
-      <change afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/dispatcher.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/token_validator.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/udp_broadcast.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/base_handler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/directMessage_handler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/file_handler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/game_hanlder.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/group_handler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/post_handler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/profile_handler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/game_session.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/group.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/message.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/peer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/storage/message_store.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/storage/peer_directory.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/storage/revocation_list.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/display.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/base64_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/printer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/time_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/token_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="requirements">
+      <change afterPath="$PROJECT_DIR$/handlers/direct_message_handler.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/message_id_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/dispatcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/dispatcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/token_validator.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/token_validator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/udp_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/udp_broadcast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/directMessage_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/profile_broadcast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/post_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/post_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/profile_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/profile_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/peer.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/peer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/storage/message_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/storage/message_store.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/storage/peer_directory.py" beforeDir="false" afterPath="$PROJECT_DIR$/storage/peer_directory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/printer.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/printer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/time_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/time_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/token_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/token_utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,6 +62,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "node.js.detected.package.eslint": "true",
@@ -103,7 +94,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1754118346878</updated>
-      <workItem from="1754118348274" duration="2160000" />
+      <workItem from="1754118348274" duration="15450000" />
     </task>
     <task id="LOCAL-00001" summary="s">
       <option name="closed" value="true" />
@@ -113,7 +104,23 @@
       <option name="project" value="LOCAL" />
       <updated>1754118426924</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="structure">
+      <option name="closed" value="true" />
+      <created>1754121020983</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1754121020983</updated>
+    </task>
+    <task id="LOCAL-00003" summary="requirements">
+      <option name="closed" value="true" />
+      <created>1754121781310</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1754121781310</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -132,6 +139,22 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="s" />
-    <option name="LAST_COMMIT_MESSAGE" value="s" />
+    <MESSAGE value="structure" />
+    <MESSAGE value="requirements" />
+    <option name="LAST_COMMIT_MESSAGE" value="requirements" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/handlers/post_handler.py</url>
+          <line>3</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/CSNETWORK_MP$main.coverage" NAME="main Coverage Results" MODIFIED="1754135446363" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

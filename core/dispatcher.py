@@ -5,7 +5,7 @@ from utils.printer import verbose_log
 
 def parse_message(message: str) -> dict:
     """
-    Parses a raw LSNP key-valye message string into a dictionary with the format KEY: VALUE.
+    Parses a raw LSNP key-value message string into a dictionary with the format KEY: VALUE.
     Args:
         message (str): A raw LSNP key-valye message received over the network.
 

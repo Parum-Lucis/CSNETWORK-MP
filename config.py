@@ -14,4 +14,8 @@ DEFAULT_AVATAR_TYPE = "none"
 MAX_AVATAR_SIZE = 20 * 1024 #20 KB
 
 # Display / Debug
-VERBOSE = False
+VERBOSE = True
+def toggle_verbose():
+    global VERBOSE
+    VERBOSE = not VERBOSE
+    return VERBOSE

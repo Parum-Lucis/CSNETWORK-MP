@@ -2,10 +2,13 @@ import sys
 import time
 
 import questionary
+
+import config
 from models.peer import Profile
 from utils.base64_utils import encode_image_to_base64
 from utils.network_utils import get_local_ip
 from storage.peer_directory import get_peers
+from utils.printer import clear_screen
 from utils.time_utils import wait_for_enter
 import os
 
@@ -41,15 +44,18 @@ def launch_cli() -> Profile:
 
 def launch_main_menu(profile: Profile, udp):
     while True:
+        status_note = "(Verbose ON)" if config.VERBOSE else ""
+
         choice = questionary.select(
             "Select an option:",
             choices=[
-                "Post",
-                "Check Feed",
-                "Peer",
-                "Notifications",
-                "Verbose Logs",
-                "Terminate"
+                "Post", # post and broadcast
+                "Check Feed", # read all following posts with like or dislike. move from different post to like and dislike using arrow keys
+                "Peer", # this is where you select an active peer using arrow keys and select an action using numbers to do DM, FTP, Game
+                "Group", # Group
+                "Notifications", # put non-verbose logs
+                status_note, # put verbose logs
+                "Terminate" #end
             ]
         ).ask()
         #TODO IMPLEMENT UI
@@ -100,6 +106,3 @@ def show_peers(local_profile):
     except KeyboardInterrupt:
         clear_screen()
         return
-
-def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')

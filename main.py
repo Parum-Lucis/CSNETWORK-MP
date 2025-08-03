@@ -1,15 +1,21 @@
 import os
 
+import questionary
+
+import config
 from core.udp_broadcast import UDPListener
 from core.dispatcher import Dispatcher
 from core.profile_broadcast import start_broadcast
 from models.peer import Profile
 from ui.cli import launch_cli, launch_main_menu
+from utils.printer import clear_screen
 from utils.profile_utils import load_profile_from_file, save_profile_to_file
 
 
 def main():
     print("LSNP Peer Starting...\n")
+
+    config.VERBOSE = questionary.confirm("Enable verbose mode?").ask()
 
     os.makedirs("profiles", exist_ok=True)
     profile_tag = input("Enter a unique profile tag (e.g., denzel1): ").strip()
@@ -21,6 +27,8 @@ def main():
     else:
         local_profile = launch_cli()
         save_profile_to_file(local_profile, filename)
+
+    clear_screen()
 
     dispatcher = Dispatcher()
     listener = UDPListener()

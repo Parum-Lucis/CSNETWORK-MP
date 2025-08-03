@@ -4,18 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="idk what i added">
-      <change afterPath="$PROJECT_DIR$/utils/network_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/profile_utils.py" afterDir="false" />
+    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="Added CLI Functionality">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/udp_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/udp_broadcast.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/profile_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/profile_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/peer.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/peer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/storage/peer_directory.py" beforeDir="false" afterPath="$PROJECT_DIR$/storage/peer_directory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/time_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/time_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/printer.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/printer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,7 +84,7 @@
       <option name="presentableId" value="Default" />
       <updated>1754118346878</updated>
       <workItem from="1754118348274" duration="22497000" />
-      <workItem from="1754195930933" duration="16577000" />
+      <workItem from="1754195930933" duration="21202000" />
     </task>
     <task id="LOCAL-00001" summary="s">
       <option name="closed" value="true" />
@@ -148,7 +142,15 @@
       <option name="project" value="LOCAL" />
       <updated>1754149391042</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Added CLI Functionality">
+      <option name="closed" value="true" />
+      <created>1754227452533</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1754227452533</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -173,7 +175,8 @@
     <MESSAGE value="MILESTONE 1 w/ config" />
     <MESSAGE value="MILESTONE 1 w/ optional work" />
     <MESSAGE value="idk what i added" />
-    <option name="LAST_COMMIT_MESSAGE" value="idk what i added" />
+    <MESSAGE value="Added CLI Functionality" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added CLI Functionality" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

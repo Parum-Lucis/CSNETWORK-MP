@@ -1,4 +1,10 @@
-from config import VERBOSE
+import os
+import config
+
+
+def verbose_log(prefix: str, message: str):
+    if config.VERBOSE:
+        print(f"[{prefix}] {message}")
 
 def verbose_log(prefix: str, message: str):
     """
@@ -10,3 +16,6 @@ def verbose_log(prefix: str, message: str):
     """
     if VERBOSE:
         print(prefix + " " + message)
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')

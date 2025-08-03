@@ -52,7 +52,7 @@ def launch_main_menu(profile: Profile, udp):
                 "Post", # post and broadcast
                 "Check Feed", # read all following posts with like or dislike. move from different post to like and dislike using arrow keys
                 "Peer", # this is where you select an active peer using arrow keys and select an action using numbers to do DM, FTP, Game
-                "Group", # Group
+                "Group", # Group Create, Update, and Message
                 "Notifications", # put non-verbose logs
                 status_note, # put verbose logs
                 "Terminate" #end

@@ -1,11 +1,6 @@
 import os
 import config
 
-
-def verbose_log(prefix: str, message: str):
-    if config.VERBOSE:
-        print(f"[{prefix}] {message}")
-
 def verbose_log(prefix: str, message: str):
     """
         Prints debug/log messages only if VERBOSE mode is enabled.
@@ -14,7 +9,7 @@ def verbose_log(prefix: str, message: str):
             prefix (str): A label of the message to be printed.
             message (str): The message body to display.
     """
-    if VERBOSE:
+    if config.VERBOSE:
         print(prefix + " " + message)
 
 def clear_screen():

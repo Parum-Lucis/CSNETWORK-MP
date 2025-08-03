@@ -13,3 +13,6 @@ def generate_message_id() -> str:
     Note: AI-generated code
     """
     return uuid.uuid4().hex
+
+def build_ack_message(user_id: str, message_type: str) -> str:
+    return f"TYPE: ACK\nUSER_ID: {user_id}\nACK_TYPE: {message_type}\n\n"

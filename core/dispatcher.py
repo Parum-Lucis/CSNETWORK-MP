@@ -1,3 +1,4 @@
+from handlers.ack_handler import handle_ack
 from handlers.profile_handler import handle_profile
 from handlers.post_handler import handle_post
 from handlers.direct_message_handler import handle_dm
@@ -54,5 +55,8 @@ class Dispatcher:
             handle_post(msg, addr)
         elif msg_type == "DM":
             handle_dm(msg, addr)
+        elif msg_type == "ACK":
+            handle_ack(msg, addr)
         else:
             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
+

@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="Added CLI Functionality">
+    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="Added Group docu">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/printer.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/printer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/direct_message_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/direct_message_handler.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +81,7 @@
       <option name="presentableId" value="Default" />
       <updated>1754118346878</updated>
       <workItem from="1754118348274" duration="22497000" />
-      <workItem from="1754195930933" duration="21202000" />
+      <workItem from="1754195930933" duration="22205000" />
     </task>
     <task id="LOCAL-00001" summary="s">
       <option name="closed" value="true" />
@@ -150,7 +147,23 @@
       <option name="project" value="LOCAL" />
       <updated>1754227452533</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Added Verbose Mode">
+      <option name="closed" value="true" />
+      <created>1754234363356</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1754234363356</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Added Group docu">
+      <option name="closed" value="true" />
+      <created>1754234410383</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1754234410383</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -176,7 +189,9 @@
     <MESSAGE value="MILESTONE 1 w/ optional work" />
     <MESSAGE value="idk what i added" />
     <MESSAGE value="Added CLI Functionality" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added CLI Functionality" />
+    <MESSAGE value="Added Verbose Mode" />
+    <MESSAGE value="Added Group docu" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added Group docu" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

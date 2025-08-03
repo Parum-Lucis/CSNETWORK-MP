@@ -45,7 +45,7 @@ class UDPListener:
         UDP broadcast to all peers on the local network.
 
         Args:
-            message (str): The LSNP-formatted message to send; TODO change
+            message (str): The LSNP-formatted message to send; TODO change to actual receiver
         """
         self.sock.sendto(message.encode('utf-8'), ('255.255.255.255', self.port))
 
@@ -55,6 +55,6 @@ class UDPListener:
 
         Args:
             message (str): The LSNP-formatted message to send.
-            ip (str): The IP address of the target peer; TODO change
+            ip (str): The IP address of the target peer; TODO change to actual receiver
         """
         self.sock.sendto(message.encode('utf-8'), (ip, self.port))

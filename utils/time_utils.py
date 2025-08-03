@@ -8,3 +8,6 @@ def current_unix_time() -> int:
         int: Current time in seconds
     """
     return int(time.time())
+
+def wait_for_enter():
+    input("\n🔙 Press Enter to return to the main menu...")

@@ -4,10 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="MILESTONE 1 w/ optional work">
+    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="idk what i added">
+      <change afterPath="$PROJECT_DIR$/utils/network_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/profile_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/dispatcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/dispatcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/game_hanlder.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/game_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/udp_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/udp_broadcast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/profile_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/profile_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/peer.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/peer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/storage/peer_directory.py" beforeDir="false" afterPath="$PROJECT_DIR$/storage/peer_directory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/time_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/time_utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,21 +32,21 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "Parum-Lucis"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Parum-Lucis&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Parum-Lucis/CSNETWORK-MP.git",
-    "accountId": "34005450-7e8f-425f-984b-5b635c13e8d4"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Parum-Lucis/CSNETWORK-MP.git&quot;,
+    &quot;accountId&quot;: &quot;34005450-7e8f-425f-984b-5b635c13e8d4&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 3
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
   <component name="ProjectId" id="30ilbcsO0cIwkEnkjGCt6DgvmLR" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -56,6 +64,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "terminal",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -80,7 +89,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1754118346878</updated>
-      <workItem from="1754118348274" duration="21698000" />
+      <workItem from="1754118348274" duration="22497000" />
+      <workItem from="1754195930933" duration="16577000" />
     </task>
     <task id="LOCAL-00001" summary="s">
       <option name="closed" value="true" />
@@ -130,7 +140,15 @@
       <option name="project" value="LOCAL" />
       <updated>1754137941284</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="idk what i added">
+      <option name="closed" value="true" />
+      <created>1754149391042</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1754149391042</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -154,7 +172,8 @@
     <MESSAGE value="MILESTONE 1 w/ documentation" />
     <MESSAGE value="MILESTONE 1 w/ config" />
     <MESSAGE value="MILESTONE 1 w/ optional work" />
-    <option name="LAST_COMMIT_MESSAGE" value="MILESTONE 1 w/ optional work" />
+    <MESSAGE value="idk what i added" />
+    <option name="LAST_COMMIT_MESSAGE" value="idk what i added" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -164,11 +183,16 @@
           <line>3</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/core/udp_broadcast.py</url>
+          <line>42</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/CSNETWORK_MP$config.coverage" NAME="config Coverage Results" MODIFIED="1754137522422" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/CSNETWORK_MP$main.coverage" NAME="main Coverage Results" MODIFIED="1754147554301" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CSNETWORK_MP$main.coverage" NAME="main Coverage Results" MODIFIED="1754225016861" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

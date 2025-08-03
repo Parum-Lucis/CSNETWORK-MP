@@ -12,7 +12,7 @@ class Profile:
             ip (str): IP address of the peer.
             display_name (str, optional): Friendly name to show (defaults to user_id).
             status (str, optional): Current status message (e.g., "Online", "Busy").
-            avatar_type (str, optional): Type of avatar used (e.g., "ascii", "emoji").
+            avatar_type (str, optional): Type of avatar used
             avatar_data (str, optional): Encoded avatar image or emoji.
         """
         self.user_id = user_id

@@ -25,5 +25,4 @@ def handle_profile(msg: dict, addr):
         decode_base64_to_image(profile.avatar_data, output_path)
         verbose_log("INFO", f"Saved avatar for {profile.user_id} to {output_path}")
 
-    print(str(profile))
     verbose_log("INFO", f"Updated peer profile: {profile.user_id} from {addr}")

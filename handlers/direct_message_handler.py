@@ -10,7 +10,7 @@ def handle_dm(msg: dict, addr):
         msg (dict): the direct message
         addr (IP, port): the peer's address
     """
-    """
+
     token = msg.get("TOKEN")
     from_user = msg.get("FROM")
     to_user = msg.get("TO")
@@ -23,4 +23,4 @@ def handle_dm(msg: dict, addr):
     sender_name = from_user.split("@")[0]
     print(f"💌 DM from {sender_name}: {content}")
     verbose_log("INFO", f"DM received from {from_user} at {addr[0]}")
-    """
+    

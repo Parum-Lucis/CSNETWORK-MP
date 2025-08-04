@@ -21,6 +21,6 @@ def handle_dm(msg: dict, addr):
         return
 
     sender_name = from_user.split("@")[0]
-    print(f"💌 DM from {sender_name}: {content}")
+    print(f"DM from {sender_name}: {content}")
     verbose_log("INFO", f"DM received from {from_user} at {addr[0]}")
     """

@@ -1,6 +1,7 @@
 import socket
 import threading
 from config import BUFFER_SIZE
+from utils.network_utils import get_broadcast_ip
 
 class UDPListener:
     """
@@ -24,7 +25,7 @@ class UDPListener:
         Starts a background thread to listen for incoming UDP messages.
 
         Args:
-            on_message_callback (function): A function that processes the received message.
+            on_message_callback (function): function that processes the received message.
 
         Notes:
             Runs in a separate daemon thread whatever that is
@@ -47,7 +48,8 @@ class UDPListener:
         Args:
             message (str): The LSNP-formatted message to send; TODO change to actual receiver
         """
-        self.sock.sendto(message.encode('utf-8'), ('255.255.255.255', self.port))
+        broadcast_ip = get_broadcast_ip()
+        self.sock.sendto(message.encode('utf-8'), (broadcast_ip, self.port))
 
     def send_unicast(self, message, ip: str):
         """

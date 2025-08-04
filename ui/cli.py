@@ -44,20 +44,32 @@ def launch_cli() -> Profile:
 
 def launch_main_menu(profile: Profile, udp):
     while True:
-        status_note = "(Verbose ON)" if config.VERBOSE else ""
+        if config.VERBOSE:
+            choice = questionary.select(
+                "Select an option:",
+                choices=[
+                    "Post", # post and broadcast
+                    "Check Feed", # read all following posts with like or dislike. move from different post to like and dislike using arrow keys
+                    "Peer", # this is where you select an active peer using arrow keys and select an action using numbers to do DM, FTP, Game
+                    "Group", # Group Create, Update, and Message
+                    "Notifications", # put non-verbose logs
+                    "Logs", # put verbose logs
+                    "Terminate" #end
+                ]
+            ).ask()
+        else:
+            choice = questionary.select(
+                "Select an option:",
+                choices=[
+                    "Post",  # post and broadcast
+                    "Check Feed", # read all following posts with like or dislike. move from different post to like and dislike using arrow keys
+                    "Peer", # this is where you select an active peer using arrow keys and select an action using numbers to do DM, FTP, Game
+                    "Group",  # Group Create, Update, and Message
+                    "Notifications",  # put non-verbose logs
+                    "Terminate"  # end
+                ]
+            ).ask()
 
-        choice = questionary.select(
-            "Select an option:",
-            choices=[
-                "Post", # post and broadcast
-                "Check Feed", # read all following posts with like or dislike. move from different post to like and dislike using arrow keys
-                "Peer", # this is where you select an active peer using arrow keys and select an action using numbers to do DM, FTP, Game
-                "Group", # Group Create, Update, and Message
-                "Notifications", # put non-verbose logs
-                status_note, # put verbose logs
-                "Terminate" #end
-            ]
-        ).ask()
         #TODO IMPLEMENT UI
         if choice == "Terminate":
             print("Goodbye.")
@@ -83,12 +95,12 @@ def launch_main_menu(profile: Profile, udp):
             #print("Goodbye.")
             break
         """
-
+# PING
 def show_peers(local_profile):
     try:
         while True:
             clear_screen()
-            print("📡 Live Peer View (auto-refreshes every 3s)")
+            print("Live Peer View (auto-refreshes every 3s)")
             peers = get_peers(active_within=300)  # online in last 15 sec
             if not peers:
                 print("No peers online yet.")

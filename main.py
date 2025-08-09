@@ -30,8 +30,9 @@ def main():
 
     clear_screen()
 
-    dispatcher = Dispatcher()
     listener = UDPListener()
+    dispatcher = Dispatcher(listener)
+
     start_broadcast(local_profile, listener)
 
     try:

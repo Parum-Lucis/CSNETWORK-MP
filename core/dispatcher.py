@@ -1,4 +1,5 @@
 from handlers.ack_handler import handle_ack
+from handlers.file_handler import handle_file
 from handlers.profile_handler import handle_profile
 from handlers.post_handler import handle_post
 from handlers.direct_message_handler import handle_dm
@@ -32,6 +33,13 @@ class Dispatcher:
 
     For Messages without a recognized TYPE, it will be logged as a warning!
     """
+
+    def __init__(self, listener):
+        """
+        listener: the UDP listener object, so handlers can send messages back
+        """
+        self.listener = listener
+
     def handle(self, raw_message: str, addr):
         """
             Entry point for handling all incoming raw UDP messages.
@@ -57,6 +65,8 @@ class Dispatcher:
             handle_dm(msg, addr)
         elif msg_type == "ACK":
             handle_ack(msg, addr)
+        elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
+            handle_file(msg, addr, self.listener)
         else:
             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
 

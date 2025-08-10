@@ -4,17 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="Dynamically finds IP">
-      <change afterPath="$PROJECT_DIR$/broadcast/ping_broadcast.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/handlers/ping_handler.py" afterDir="false" />
+    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="Added the Ping/Profile broadcasts.&#10;&#10;Change CLI to have a verbose/non-verbose mode such that all verbose is saved in a global VERBOSE array to store all messages received during a session&#10;&#10;Refactored Tokenization">
+      <change afterPath="$PROJECT_DIR$/senders/group_unicast.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/storage/group_directory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/broadcast/profile_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/broadcast/profile_broadcast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/broadcast/ping_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/senders/ping_broadcast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/broadcast/profile_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/senders/profile_broadcast.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/dispatcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/dispatcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/profile_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/profile_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/token_validator.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/token_validator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/udp_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/udp_broadcast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/group_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/group_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/post_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/post_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/storage/peer_directory.py" beforeDir="false" afterPath="$PROJECT_DIR$/storage/peer_directory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/token_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/token_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/network_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/network_utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -93,7 +96,7 @@
       <workItem from="1754195930933" duration="22802000" />
       <workItem from="1754274786975" duration="3624000" />
       <workItem from="1754319743122" duration="7788000" />
-      <workItem from="1754797857929" duration="7801000" />
+      <workItem from="1754797857929" duration="12024000" />
     </task>
     <task id="LOCAL-00001" summary="s">
       <option name="closed" value="true" />
@@ -199,7 +202,15 @@
       <option name="project" value="LOCAL" />
       <updated>1754327506704</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Added the Ping/Profile broadcasts.&#10;&#10;Change CLI to have a verbose/non-verbose mode such that all verbose is saved in a global VERBOSE array to store all messages received during a session&#10;&#10;Refactored Tokenization">
+      <option name="closed" value="true" />
+      <created>1754819787032</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1754819787032</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -230,7 +241,8 @@
     <MESSAGE value="Added ACK messaging&#10;Refactored udp class to be used as a singleton" />
     <MESSAGE value="Fixed Verbose bug" />
     <MESSAGE value="Dynamically finds IP" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dynamically finds IP" />
+    <MESSAGE value="Added the Ping/Profile broadcasts.&#10;&#10;Change CLI to have a verbose/non-verbose mode such that all verbose is saved in a global VERBOSE array to store all messages received during a session&#10;&#10;Refactored Tokenization" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added the Ping/Profile broadcasts.&#10;&#10;Change CLI to have a verbose/non-verbose mode such that all verbose is saved in a global VERBOSE array to store all messages received during a session&#10;&#10;Refactored Tokenization" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

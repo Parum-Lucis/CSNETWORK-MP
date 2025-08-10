@@ -9,7 +9,7 @@ class UDPListener:
     """
     def __init__(self, port=50999):
         """
-           Initializes the UDP socket based on the broadcast and reuse settings on all network interfaces' ports.
+           Initializes the UDP socket based on the senders and reuse settings on all network interfaces' ports.
 
            Args:
                port (int): The UDP port to listen on. Default is 50999.
@@ -43,7 +43,7 @@ class UDPListener:
 
     def send_broadcast(self, message: str):
         """
-        UDP broadcast to all peers on the local network.
+        UDP senders to all peers on the local network.
 
         Args:
             message (str): The LSNP-formatted message to send; TODO change to actual receiver

@@ -19,8 +19,9 @@ def start_broadcast(user_id: str, udp_sender):
         while True:
             msg = build_ping_message(user_id)
             udp_sender.send_broadcast(msg)
-            verbose_log("BROADCAST", "Sent PING broadcast")
+            verbose_log("BROADCAST", "Sent PING senders")
             time.sleep(BROADCAST_INTERVAL)
 
     thread = threading.Thread(target=loop, daemon=True)
     thread.start()
+

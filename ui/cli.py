@@ -48,7 +48,7 @@ def launch_main_menu(profile: Profile, udp):
             choice = questionary.select(
                 "Select an option:",
                 choices=[
-                    "Post", # post and broadcast
+                    "Post", # post and senders
                     "Check Feed", # read all following posts with like or dislike. move from different post to like and dislike using arrow keys
                     "Peer", # this is where you select an active peer using arrow keys and select an action using numbers to do DM, FTP, Game
                     "Group", # Group Create, Update, and Message
@@ -61,7 +61,7 @@ def launch_main_menu(profile: Profile, udp):
             choice = questionary.select(
                 "Select an option:",
                 choices=[
-                    "Post",  # post and broadcast
+                    "Post",  # post and senders
                     "Check Feed", # read all following posts with like or dislike. move from different post to like and dislike using arrow keys
                     "Peer", # this is where you select an active peer using arrow keys and select an action using numbers to do DM, FTP, Game
                     "Group",  # Group Create, Update, and Message

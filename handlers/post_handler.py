@@ -13,7 +13,7 @@ def handle_post(msg: dict, addr):
     user_id = msg.get("USER_ID")
     content = msg.get("CONTENT")
 
-    if not validate_token(token, expected_scope="broadcast"):
+    if not validate_token(token, expected_scope="senders"):
         verbose_log("DROP!", f"Invalid token for POST from {user_id}")
         return
 

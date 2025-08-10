@@ -3,8 +3,8 @@ import questionary
 import config
 from core.udp_broadcast import UDPListener
 from core.dispatcher import Dispatcher
-from broadcast.profile_broadcast import start_broadcast as start_profile_broadcast
-from broadcast.ping_broadcast import start_broadcast as start_ping_broadcast
+from senders.profile_broadcast import start_broadcast as start_profile_broadcast
+from senders.ping_broadcast import start_broadcast as start_ping_broadcast
 from ui.cli import launch_cli, launch_main_menu
 from utils.printer import clear_screen
 from utils.profile_utils import load_profile_from_file, save_profile_to_file
@@ -33,10 +33,10 @@ def main():
     dispatcher = Dispatcher()
     listener = UDPListener()
 
-    # Start PROFILE broadcast loop
+    # Start PROFILE senders loop
     start_profile_broadcast(local_profile, listener)
 
-    # Start PING broadcast loop (keep-alive)
+    # Start PING senders loop (keep-alive)
     start_ping_broadcast(local_profile.user_id, listener)
 
     # Start UDP listener

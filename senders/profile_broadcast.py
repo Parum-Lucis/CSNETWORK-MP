@@ -7,7 +7,7 @@ from config import BROADCAST_INTERVAL
 
 def start_broadcast(local_profile: Profile, udp_sender: UDPListener):
     """
-    Starts a background thread that periodically (based on BROADCAST_INTERVAL) broadcast messages to the network.
+    Starts a background thread that periodically (based on BROADCAST_INTERVAL) senders messages to the network.
 
     Args:
         local_profile (Profile): the local peer's profile data.
@@ -17,7 +17,7 @@ def start_broadcast(local_profile: Profile, udp_sender: UDPListener):
         while True:
             msg = build_profile_message(local_profile)
             udp_sender.send_broadcast(msg)
-            verbose_log("BROADCAST", "Sent PROFILE broadcast")
+            verbose_log("BROADCAST", "Sent PROFILE senders")
             time.sleep(BROADCAST_INTERVAL)
 
     thread = threading.Thread(target=loop, daemon=True)
@@ -40,7 +40,7 @@ def build_profile_message(profile: Profile) -> str:
         profile (Profile): The local peer's Profile instance.
 
     Returns:
-        str: A formatted string ready to be sent via UDP broadcast.
+        str: A formatted string ready to be sent via UDP senders.
     """
     lines = [
         "TYPE: PROFILE",

@@ -15,10 +15,10 @@ def get_local_ip() -> str:
 
 def get_broadcast_ip() -> str:
     """
-    Attempts to compute the local subnet's broadcast IP based on the current IP.
+    Attempts to compute the local subnet's senders IP based on the current IP.
 
     Returns:
-        str: A broadcast IP address like '192.168.1.255'
+        str: A senders IP address like '192.168.1.255'
     """
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

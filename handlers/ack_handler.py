@@ -10,6 +10,7 @@ def handle_ack(msg: dict, addr: tuple):
         STATUS: RECEIVED
     """
     message_id = msg.get("MESSAGE_ID")
+    file_id = msg.get("FILEID")
     status = msg.get("STATUS")
 
     if not message_id or not status:
@@ -18,8 +19,8 @@ def handle_ack(msg: dict, addr: tuple):
 
     verbose_log("ACK", f"Received ACK for {message_id} with status {status} from {addr[0]}")
 
-    if resolve_ack(message_id):
-        verbose_log("ACK", f"ACK resolved and callback executed for {message_id}")
+    if resolve_ack(message_id) or resolve_ack(file_id):
+        verbose_log("ACK", f"ACK resolved and callback executed for {message_id if message_id else file_id}")
     else:
         verbose_log("ACK", f"No pending ACK for {message_id}")
 

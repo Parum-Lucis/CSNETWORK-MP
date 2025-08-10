@@ -85,15 +85,14 @@ def process_file_offer(msg, addr, udp):
     file_size = msg.get("FILESIZE")
     ip = addr[0]
 
-    print(f"\n📥 File offer from {from_user}: {file_name} ({file_size} bytes)")
-
+    print(f"\n📥 User {from_user} is sending you a file do you accept? {file_name} ({file_size} bytes)")
     accept = questionary.confirm("Accept file?").ask()
     if accept:
         from models.file_transfer import FileTransferResponder
         responder = FileTransferResponder(udp)
         responder.accept_file_offer(
             to_ip=ip,
-            original_message_id=msg["MESSAGE_ID"]
+            file_id=msg["FILEID"]
         )
     else:
         print("❌ File offer declined.")

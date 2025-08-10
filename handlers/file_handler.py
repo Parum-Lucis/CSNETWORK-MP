@@ -19,7 +19,7 @@ def handle_file(msg: dict, addr: tuple, listener, local_profile):
 
     if to_user != local_profile.user_id:
         return None
-
+    
     if msg_type == "FILE_OFFER":
         pending_file_offers.put((msg, addr))
         file_buffer[file_id] = {
@@ -29,7 +29,7 @@ def handle_file(msg: dict, addr: tuple, listener, local_profile):
             "from_user": from_user,
             "to_user": to_user,
             "sender_ip": ip,
-            "original_message_id": msg["MESSAGE_ID"]
+            "original_message_id": msg["FILEID"]
         }
 
     elif msg_type == "FILE_CHUNK":
@@ -61,7 +61,7 @@ def save_chunks(file_id, buffer, listener):
             f.write(buffer["chunks"][i])
 
     # Add to log queue
-    pending_logs.put(f"✅ File saved as {filename}")
+    pending_logs.put(f"✅ File transfer of {filename} is complete")
 
     # Send FILE_RECEIVED confirmation
     responder = FileTransferResponder(listener)

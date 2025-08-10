@@ -52,7 +52,7 @@ def launch_main_menu(profile: Profile, udp):
                     "Check Feed", # read all following posts with like or dislike. move from different post to like and dislike using arrow keys
                     "Peer", # this is where you select an active peer using arrow keys and select an action using numbers to do DM, FTP, Game
                     "Group", # Group Create, Update, and Message
-                    "Notifications", # put non-verbose logs
+                    "Notifications", # put asynch non-verbose logs
                     "Logs", # put verbose logs
                     "Terminate" #end
                 ]
@@ -65,7 +65,7 @@ def launch_main_menu(profile: Profile, udp):
                     "Check Feed", # read all following posts with like or dislike. move from different post to like and dislike using arrow keys
                     "Peer", # this is where you select an active peer using arrow keys and select an action using numbers to do DM, FTP, Game
                     "Group",  # Group Create, Update, and Message
-                    "Notifications",  # put non-verbose logs
+                    "Notifications",  # put asynch non-verbose logs
                     "Terminate"  # end
                 ]
             ).ask()
@@ -101,7 +101,7 @@ def show_peers(local_profile):
         while True:
             clear_screen()
             print("Live Peer View (auto-refreshes every 3s)")
-            peers = get_peers(active_within=300)  # online in last 15 sec
+            peers = get_peers(active_within=300)  # online in last 300 sec
             if not peers:
                 print("No peers online yet.")
             else:

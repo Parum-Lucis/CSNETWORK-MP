@@ -25,7 +25,7 @@ def start_broadcast(local_profile: Profile, udp_sender: UDPListener):
 
 def build_profile_message(profile: Profile) -> str:
     """
-    Formats a LSNP Profile message from a Profile Object based on LSNP standard
+    Formats a LSNP Profile message from a Profile Object based on the LSNP standard
     Required fields:
         TYPE: PROFILE
         USER_ID

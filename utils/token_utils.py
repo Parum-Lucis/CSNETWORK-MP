@@ -14,3 +14,4 @@ def generate_token(user_id: str, ttl: int, scope: str) -> str:
     """
     expiry = int(time.time()) + ttl
     return f"{user_id}|{expiry}|{scope}"
+

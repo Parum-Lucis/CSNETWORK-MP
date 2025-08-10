@@ -18,11 +18,7 @@ def handle_profile(msg: dict, addr):
     profile = Profile.from_message(msg, addr)
     update_peer(profile.user_id, profile)
 
-    if profile.avatar_data and profile.avatar_type and profile.avatar_type.startswith("image/"):
-        os.makedirs("avatars", exist_ok=True)  # Create directory if it doesn't exist
-        file_ext = profile.avatar_type.split("/")[-1]  # e.g., "png", "jpeg"
-        output_path = f"avatars/{profile.user_id}.{file_ext}"
-        decode_base64_to_image(profile.avatar_data, output_path)
-        verbose_log("INFO", f"Saved avatar for {profile.user_id} to {output_path}")
+    if profile.avatar_type and profile.avatar_data:
+        decode_base64_to_image(profile.avatar_data, f"{profile.user_id}_avatar.{profile.avatar_type}")
 
     verbose_log("INFO", f"Updated peer profile: {profile.user_id} from {addr}")

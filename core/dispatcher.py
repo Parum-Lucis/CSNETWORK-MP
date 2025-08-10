@@ -1,4 +1,5 @@
 from handlers.ack_handler import handle_ack
+from handlers.ping_handler import handle_ping
 from handlers.profile_handler import handle_profile
 from handlers.post_handler import handle_post
 from handlers.direct_message_handler import handle_dm
@@ -57,6 +58,8 @@ class Dispatcher:
             handle_dm(msg, addr)
         elif msg_type == "ACK":
             handle_ack(msg, addr)
+        elif msg_type == "PING":
+            handle_ping(msg, addr)
         else:
             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
 

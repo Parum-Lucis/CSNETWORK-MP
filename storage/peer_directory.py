@@ -1,4 +1,4 @@
-from time import time
+import time
 from typing import Dict
 from models.peer import Profile
 
@@ -12,7 +12,12 @@ def update_peer(user_id: str, profile: Profile):
         user_id (str): The peer's unique identifier
         profile (Profile): The peer's profile data.
     """
-    peer_table[user_id] = (profile, time())
+    peer_table[user_id] = (profile, time.time())
+
+def update_peer_last_seen(user_id: str):
+    if user_id in peer_table:
+        profile, _ = peer_table[user_id]
+        peer_table[user_id] = (profile, time.time())
 
 def get_peers(active_within=300):
     """
@@ -21,7 +26,7 @@ def get_peers(active_within=300):
     Returns:
         list[Profile]: A list of all known peer Profile objects.
     """
-    now = time()
+    now = time.time()
     return [
         profile
         for profile, last_seen in peer_table.values()

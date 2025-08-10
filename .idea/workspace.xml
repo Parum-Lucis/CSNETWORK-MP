@@ -4,15 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="Fixed Verbose bug">
+    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="Dynamically finds IP">
+      <change afterPath="$PROJECT_DIR$/broadcast/ping_broadcast.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handlers/ping_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/profile_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/broadcast/profile_broadcast.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/udp_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/udp_broadcast.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/direct_message_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/direct_message_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/broadcast/profile_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/broadcast/profile_broadcast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/dispatcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/dispatcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/profile_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/profile_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/storage/message_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/storage/message_store.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/storage/peer_directory.py" beforeDir="false" afterPath="$PROJECT_DIR$/storage/peer_directory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/network_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/network_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/token_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/token_utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,7 +92,8 @@
       <workItem from="1754118348274" duration="22497000" />
       <workItem from="1754195930933" duration="22802000" />
       <workItem from="1754274786975" duration="3624000" />
-      <workItem from="1754319743122" duration="6776000" />
+      <workItem from="1754319743122" duration="7788000" />
+      <workItem from="1754797857929" duration="7801000" />
     </task>
     <task id="LOCAL-00001" summary="s">
       <option name="closed" value="true" />
@@ -188,7 +191,15 @@
       <option name="project" value="LOCAL" />
       <updated>1754239488372</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Dynamically finds IP">
+      <option name="closed" value="true" />
+      <created>1754327506704</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1754327506704</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -218,7 +229,8 @@
     <MESSAGE value="Added Group docu" />
     <MESSAGE value="Added ACK messaging&#10;Refactored udp class to be used as a singleton" />
     <MESSAGE value="Fixed Verbose bug" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed Verbose bug" />
+    <MESSAGE value="Dynamically finds IP" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dynamically finds IP" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -227,11 +239,6 @@
           <url>file://$PROJECT_DIR$/handlers/post_handler.py</url>
           <line>3</line>
           <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/core/udp_broadcast.py</url>
-          <line>59</line>
-          <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

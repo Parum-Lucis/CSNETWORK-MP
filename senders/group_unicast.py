@@ -3,7 +3,6 @@ from storage.peer_directory import get_peer
 from storage.group_directory import get_group_members
 from utils.token_utils import generate_token
 
-# ====== MESSAGE BUILDERS ====== #
 def build_group_create(profile, group_id, group_name, members):
     token = generate_token(profile.user_id, ttl=3600, scope="group")
     return "\n".join([
@@ -47,7 +46,6 @@ def build_group_message(profile, group_id, content):
         ""
     ])
 
-# ====== SEND HELPERS ====== #
 def send_group_create(profile, group_id, group_name, members, udp_listener):
     """
     Broadcasts GROUP_CREATE to all members.

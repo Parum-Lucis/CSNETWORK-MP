@@ -34,11 +34,12 @@ class Dispatcher:
     For Messages without a recognized TYPE, it will be logged as a warning!
     """
 
-    def __init__(self, listener):
+    def __init__(self, listener, local_profile):
         """
         listener: the UDP listener object, so handlers can send messages back
         """
         self.listener = listener
+        self.local_profile = local_profile
 
     def handle(self, raw_message: str, addr):
         """
@@ -66,7 +67,7 @@ class Dispatcher:
         elif msg_type == "ACK":
             handle_ack(msg, addr)
         elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
-            handle_file(msg, addr, self.listener)
+            handle_file(msg, addr, self.listener, self.local_profile)
         else:
             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
 

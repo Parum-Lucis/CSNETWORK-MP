@@ -5,7 +5,7 @@ from ui.cli import flush_pending_logs, pending_file_offers, pending_logs  # impo
 
 file_buffer = {}
 
-def handle_file(msg: dict, addr: tuple, listener):
+def handle_file(msg: dict, addr: tuple, listener, local_profile):
     """
     Handles file-related messages. Non-blocking — file offers go to queue.
     """
@@ -16,6 +16,9 @@ def handle_file(msg: dict, addr: tuple, listener):
     ip = addr[0]
 
     responder = FileTransferResponder(listener)
+
+    if to_user != local_profile.user_id:
+        return None
 
     if msg_type == "FILE_OFFER":
         pending_file_offers.put((msg, addr))

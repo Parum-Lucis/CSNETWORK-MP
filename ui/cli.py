@@ -145,7 +145,6 @@ def launch_main_menu(profile: Profile, udp):
                         file_result["file_name"]
                     )
                     file_transfer.file_offer()
-
         else:
             continue
 
@@ -159,7 +158,7 @@ def select_peer(local_profile):
             clear_screen()
             questionary.print("📡 Live Peer View (auto-refreshes every 3s)", style="bold")
             peers = get_peers(active_within=300)
-            peers = [p for p in peers]
+            peers = [p for p in peers if local_profile.user_id != p.user_id]
 
             if not peers:
                 if not waiting:

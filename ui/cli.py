@@ -110,19 +110,34 @@ def launch_main_menu(profile: Profile, udp):
             msg, addr = pending_file_offers.get()
             process_file_offer(msg, addr, udp)
 
-        status_note = "(Verbose ON)" if config.VERBOSE else ""
+        console = "(Verbose ON)" if config.VERBOSE else ""
 
-        choice = questionary.select(
-            "Select an option:",
-            choices=[
-                "Post",
-                "Check Feed",
-                "Peer",
-                "Group",
-                "Notifications",
-                "Terminate"
-            ]
-        ).ask()
+        if config.VERBOSE:
+            choice = questionary.select(
+                "Select an option:",
+                choices=[
+                    "Post",
+                    "Check Feed",
+                    "Peer",
+                    "Group",
+                    "Notifications",
+                    "Verbose Console",
+                    "Terminate"
+                ]
+            ).ask()
+
+        else:
+            choice = questionary.select(
+                "Select an option:",
+                choices=[
+                    "Post",
+                    "Check Feed",
+                    "Peer",
+                    "Group",
+                    "Verbose Console",
+                    "Terminate"
+                ]
+            ).ask()
 
         if choice == "Terminate":
             questionary.print("👋 Goodbye.", style="bold fg:green")

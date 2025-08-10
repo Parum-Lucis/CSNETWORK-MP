@@ -13,6 +13,7 @@ from utils.printer import clear_screen
 from utils.time_utils import wait_for_enter
 from models.file_transfer import FileTransfer
 from models.file_transfer import FileTransferResponder
+from storage.post_store import get_recent_posts
 
 # ===============================
 # Queues shared with background handlers
@@ -121,6 +122,7 @@ def launch_main_menu(profile: Profile, udp):
                 "Peer",
                 "Group",
                 "Notifications",
+                "Settings: Change Post TTL",
                 "Terminate"
             ]
         ).ask()
@@ -146,6 +148,23 @@ def launch_main_menu(profile: Profile, udp):
                         file_result["file_name"]
                     )
                     file_transfer.file_offer()
+
+        elif choice == "Settings: Change Post TTL":
+            new_post_ttl = questionary.text(f"Enter new Post TTL in seconds (current {config.token_ttl_post}): ").ask()
+
+            try:
+                config.token_ttl_post = int(new_post_ttl)
+                questionary.print(f"✅ Post TTL updated to {new_post_ttl} seconds.", style="fg:green")
+            except ValueError:
+                questionary.print(f"❌ Invalid number. TTL not changed.", style="fg=red")
+
+        elif choice == "Post":
+            content = questionary.text("Enter your post content:").ask()
+            from senders.post_broadcast import send_post
+            send_post(profile, content, udp)
+
+        elif choice == "Check Feed":
+            display_feed()
 
         else:
             continue
@@ -208,3 +227,14 @@ def peer_menu():
         if choice == "↩ Return to menu" or choice is None:
             return None
         return choice
+    
+def display_feed():
+    posts = get_recent_posts()
+    if not posts:
+        questionary.print("📭 No posts to show.", style="fg:yellow")
+        wait_for_enter()
+        return
+
+    for post in posts:
+        questionary.print(f"📭 Post from {post.get("USER_ID")}: {post.get("CONTENT")}")
+    wait_for_enter()

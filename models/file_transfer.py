@@ -19,7 +19,6 @@ class FileTransfer:
         self.listener = listener
 
         self.file_id = uuid.uuid4().hex
-        self.offer_message_id = uuid.uuid4().hex
         self.chunk_size = 1024
 
     def file_offer(self):
@@ -42,14 +41,13 @@ class FileTransfer:
             "FILEID": self.file_id,
             "DESCRIPTION": self.description,
             "TIMESTAMP": str(int(time.time())),
-            "MESSAGE_ID": self.offer_message_id,
             "TOKEN": generate_token(self.from_profile.user_id, 600, "file")
         }
 
         message = "\n".join(f"{k}: {v}" for k, v in offer.items()) + "\n\n"
         self.listener.send_unicast(message, self.to_profile.ip)
         print("Sent File Offer:", offer)
-        register_ack(self.offer_message_id, self.file_transmit)
+        register_ack(self.file_id, self.file_transmit)
        
 
         # TODO Verbose logs
@@ -115,9 +113,9 @@ class FileTransferResponder:
         msg = "\n".join(f"{k}: {v}" for k, v in confirm.items()) + "\n\n"
         self.listener.send_unicast(msg, to_ip)
 
-    def accept_file_offer(self, to_ip, original_message_id):
+    def accept_file_offer(self, to_ip, file_id):
         self.send_ack(
             to_ip=to_ip,
-            message_id=original_message_id,
+            message_id=file_id,
             status="ACCEPTED"
         )

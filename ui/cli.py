@@ -86,15 +86,14 @@ def process_file_offer(msg, addr, udp):
     file_size = msg.get("FILESIZE")
     ip = addr[0]
 
-    print(f"\n📥 File offer from {from_user}: {file_name} ({file_size} bytes)")
-
+    print(f"\n📥 User {from_user} is sending you a file do you accept? {file_name} ({file_size} bytes)")
     accept = questionary.confirm("Accept file?").ask()
     if accept:
         from models.file_transfer import FileTransferResponder
         responder = FileTransferResponder(udp)
         responder.accept_file_offer(
             to_ip=ip,
-            original_message_id=msg["MESSAGE_ID"]
+            file_id=msg["FILEID"]
         )
     else:
         print("❌ File offer declined.")
@@ -112,20 +111,36 @@ def launch_main_menu(profile: Profile, udp):
             msg, addr = pending_file_offers.get()
             process_file_offer(msg, addr, udp)
 
-        status_note = "(Verbose ON)" if config.VERBOSE else ""
+        console = "(Verbose ON)" if config.VERBOSE else ""
 
-        choice = questionary.select(
-            "Select an option:",
-            choices=[
-                "Post",
-                "Check Feed",
-                "Peer",
-                "Group",
-                "Notifications",
-                "Settings: Change Post TTL",
-                "Terminate"
-            ]
-        ).ask()
+        if config.VERBOSE:
+            choice = questionary.select(
+                "Select an option:",
+                choices=[
+                    "Post",
+                    "Check Feed",
+                    "Peer",
+                    "Group",
+                    "Notifications",
+                    "Verbose Console",
+                    "Settings: Change Post TTL",
+                    "Terminate"
+                ]
+            ).ask()
+
+        else:
+            choice = questionary.select(
+                "Select an option:",
+                choices=[
+                    "Post",
+                    "Check Feed",
+                    "Peer",
+                    "Group",
+                    "Verbose Console",
+                    "Settings: Change Post TTL",
+                    "Terminate"
+                ]
+            ).ask()
 
         if choice == "Terminate":
             questionary.print("👋 Goodbye.", style="bold fg:green")

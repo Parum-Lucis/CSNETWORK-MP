@@ -151,9 +151,9 @@ def select_peer(local_profile):
     try:
         waiting = False
         while True:
-            peers = get_peers(active_within=300)
-            peers = [p for p in peers if p.user_id != local_profile.user_id]
-
+            clear_screen()
+            print("📡 Live Peer View (auto-refreshes every 3s)")
+            peers = get_peers(active_within=300)  # online in last 15 sec
             if not peers:
                 if not waiting:
                     waiting = True # waiting flag

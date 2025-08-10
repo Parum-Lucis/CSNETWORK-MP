@@ -29,7 +29,7 @@ class FileTransfer:
         file_size = os.path.getsize(self.file_location)
         filename = os.path.basename(self.file_location)
         filename = self.filename if self.filename else filename
-        filetype, _ = mimetypes.guess_type(filename)
+        filetype, _ = mimetypes.guess_type(self.file_location)
         filetype = filetype or "application/octet-stream"  # fallback
 
         offer = {
@@ -50,7 +50,7 @@ class FileTransfer:
         self.listener.send_unicast(message, self.to_profile.ip)
         print("Sent File Offer:", offer)
         register_ack(self.offer_message_id, self.file_transmit)
-
+       
 
         # TODO Verbose logs
     def file_transmit(self):
@@ -78,6 +78,7 @@ class FileTransfer:
                 }
 
                 message = "\n".join(f"{k}: {v}" for k, v in chunk_msg.items()) + "\n\n"
+                print("Transmitting File Chunks:", message)
                 self.listener.send_unicast(message, self.to_profile.ip)
                 
                 # TODO Verbose logs

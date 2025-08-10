@@ -19,6 +19,7 @@ def handle_ack(msg: dict, addr: tuple):
     verbose_log("ACK", f"Received ACK for {message_id} with status {status} from {addr[0]}")
 
     if resolve_ack(message_id):
+        print("Resolving ACK")
         verbose_log("ACK", f"ACK resolved and callback executed for {message_id}")
     else:
         verbose_log("ACK", f"No pending ACK for {message_id}")

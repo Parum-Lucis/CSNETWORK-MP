@@ -137,6 +137,7 @@ def launch_main_menu(profile: Profile, udp):
                         file_result["file_name"]
                     )
                     file_transfer.file_offer()  # triggers offer message
+
             else:
                 continue
 

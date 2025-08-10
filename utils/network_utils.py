@@ -1,17 +1,20 @@
 import socket
+import sys
 
-def get_local_ip() -> str:
-    """
-    Gets the local IP address used to connect to the network.
-    """
+def get_local_ip():
+    """Return the IP from args if provided, otherwise detect automatically."""
+    # If user passed an IP as the first argument after the script name
+    if len(sys.argv) > 1:
+        return sys.argv[1]
+
+    # Otherwise, detect automatically
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
+    finally:
         s.close()
-        return ip
-    except Exception:
-        return "127.0.0.1"
+    return ip
 
 def get_broadcast_ip() -> str:
     """

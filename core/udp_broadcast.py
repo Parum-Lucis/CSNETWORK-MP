@@ -1,7 +1,7 @@
 import socket
 import threading
 from config import BUFFER_SIZE
-from utils.network_utils import get_broadcast_ip
+from utils.network_utils import get_broadcast_ip, get_local_ip
 
 class UDPListener:
     """

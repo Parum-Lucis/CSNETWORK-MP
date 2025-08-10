@@ -15,10 +15,10 @@ from models.file_transfer import FileTransfer
 from models.file_transfer import FileTransferResponder
 
 # ===============================
-# Queue for storing pending file offers from UDP listener
-# This is filled by handle_file() in another thread
+# Queues shared with background handlers
 # ===============================
-pending_file_offers = Queue()
+pending_file_offers = Queue()  # For file offers requiring user action
+pending_logs = Queue()         # For async logs (ACKs, file saved, warnings, etc.)
 
 def launch_cli() -> Profile:
     """
@@ -64,11 +64,17 @@ def file_form():
                 answers["file_name"] = questionary.text("Enter the file name to use (empty to use the default)").ask()
                 answers["description"] = questionary.text("Enter the file description: ").ask()
             else:
-                print("The file entered does not exist.")
+                questionary.print("❌ The file entered does not exist.", style="bold fg:red")
                 continue
             return answers
     except KeyboardInterrupt:
         return None
+
+def flush_pending_logs():
+    """Flush any logs from the pending_logs queue to the terminal immediately."""
+    while not pending_logs.empty():
+        log = pending_logs.get()
+        questionary.print(log, style="fg:yellow")
 
 def process_file_offer(msg, addr, udp):
     """
@@ -78,12 +84,12 @@ def process_file_offer(msg, addr, udp):
     file_name = msg.get("FILENAME")
     file_size = msg.get("FILESIZE")
     ip = addr[0]
-    file_id = msg.get("FILEID")
 
     print(f"\n📥 File offer from {from_user}: {file_name} ({file_size} bytes)")
 
     accept = questionary.confirm("Accept file?").ask()
     if accept:
+        from models.file_transfer import FileTransferResponder
         responder = FileTransferResponder(udp)
         responder.accept_file_offer(
             to_ip=ip,
@@ -92,10 +98,15 @@ def process_file_offer(msg, addr, udp):
     else:
         print("❌ File offer declined.")
 
+    # Flush any logs that may have appeared during this process
+    flush_pending_logs()
 
 def launch_main_menu(profile: Profile, udp):
     while True:
-        # ✅ Process any pending file offers before showing the menu
+        # ✅ Flush background logs
+        flush_pending_logs()
+
+        # ✅ Process pending file offers before showing menu
         while not pending_file_offers.empty():
             msg, addr = pending_file_offers.get()
             process_file_offer(msg, addr, udp)
@@ -105,20 +116,19 @@ def launch_main_menu(profile: Profile, udp):
         choice = questionary.select(
             "Select an option:",
             choices=[
-                "Post",  # post and broadcast
-                "Check Feed",  # read all following posts
-                "Peer",  # select an active peer and run actions
-                "Group",  # group management
-                "Notifications",  # non-verbose logs
-                status_note,  # verbose logs
-                "Terminate"  # end program
+                "Post",
+                "Check Feed",
+                "Peer",
+                "Group",
+                "Notifications",
+                status_note,
+                "Terminate"
             ]
         ).ask()
 
-        #TODO IMPLEMENT UI
         if choice == "Terminate":
-            print("Goodbye.")
-            time.sleep(5)
+            questionary.print("👋 Goodbye.", style="bold fg:green")
+            time.sleep(1)
             sys.exit(0)
 
         elif choice == "Peer":
@@ -136,10 +146,7 @@ def launch_main_menu(profile: Profile, udp):
                         udp,
                         file_result["file_name"]
                     )
-                    file_transfer.file_offer()  # triggers offer message
-
-            else:
-                continue
+                    file_transfer.file_offer()
 
         else:
             continue
@@ -147,24 +154,23 @@ def launch_main_menu(profile: Profile, udp):
 def select_peer(local_profile):
     """
     Shows a list of available peers and allows user to select one.
-    Returns the selected peer object or None.
     """
     try:
         waiting = False
         while True:
             clear_screen()
-            print("📡 Live Peer View (auto-refreshes every 3s)")
-            peers = get_peers(active_within=300)  # online in last 15 sec
+            questionary.print("📡 Live Peer View (auto-refreshes every 3s)", style="bold")
+            peers = get_peers(active_within=300)
+            peers = [p for p in peers]
+
             if not peers:
                 if not waiting:
-                    waiting = True # waiting flag
-                    print("😕 No other peers online. Waiting...") 
+                    waiting = True
+                    questionary.print("😕 No other peers online. Waiting...", style="fg:yellow")
                 time.sleep(3)
-                continue  # keep checking
-            
-            waiting = False # flags not waiting 
-            
-            # Format choices from live peers
+                continue
+
+            waiting = False
             choices = [
                 questionary.Choice(
                     title=f"{peer.display_name} ({peer.status}) @ {peer.ip}",
@@ -180,7 +186,7 @@ def select_peer(local_profile):
 
             if selected == "↩ Return to menu" or selected is None:
                 return None
-            return selected  # a Profile object
+            return selected
     except KeyboardInterrupt:
         return None
 
@@ -192,11 +198,11 @@ def peer_menu():
         choice = questionary.select(
             "Select an operation to run:",
             choices=[
-                "DM", 
+                "DM",
                 "Follow",
                 "Unfollow",
-                "Send File", # send file transfer offer
-                "↩ Return to menu" 
+                "Send File",
+                "↩ Return to menu"
             ]
         ).ask()
 

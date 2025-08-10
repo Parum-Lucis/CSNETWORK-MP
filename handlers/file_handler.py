@@ -1,13 +1,13 @@
 import os
 import base64
 from models.file_transfer import FileTransferResponder
-from ui.cli import pending_file_offers  # shared queue
+from ui.cli import flush_pending_logs, pending_file_offers, pending_logs  # import both queues
 
 file_buffer = {}
 
 def handle_file(msg: dict, addr: tuple, listener):
     """
-    Handles file-related messages (excluding ACK — handled by ack_handler).
+    Handles file-related messages. Non-blocking — file offers go to queue.
     """
     msg_type = msg["TYPE"]
     file_id = msg.get("FILEID")
@@ -15,14 +15,14 @@ def handle_file(msg: dict, addr: tuple, listener):
     to_user = msg.get("TO")
     ip = addr[0]
 
-    if msg_type == "FILE_OFFER":
-        # Queue for CLI to handle user prompt
-        pending_file_offers.put((msg, addr))
+    responder = FileTransferResponder(listener)
 
+    if msg_type == "FILE_OFFER":
+        pending_file_offers.put((msg, addr))
         file_buffer[file_id] = {
             "filename": "received_" + msg["FILENAME"],
             "chunks": {},
-            "total_chunks": 0,  # unknown until first chunk arrives
+            "total_chunks": 0,
             "from_user": from_user,
             "to_user": to_user,
             "sender_ip": ip,
@@ -31,35 +31,36 @@ def handle_file(msg: dict, addr: tuple, listener):
 
     elif msg_type == "FILE_CHUNK":
         if file_id not in file_buffer:
-            print("⚠️ Received chunk for unknown file")
+            pending_logs.put("⚠️ Received chunk for unknown file")
             return
 
-        # Update total_chunks dynamically
         file_buffer[file_id]["total_chunks"] = int(msg["TOTAL_CHUNKS"])
-
         chunk_num = int(msg["CHUNK_INDEX"])
         data = base64.b64decode(msg["DATA"])
         file_buffer[file_id]["chunks"][chunk_num] = data
 
-        # Check if all chunks received
         if len(file_buffer[file_id]["chunks"]) == file_buffer[file_id]["total_chunks"]:
             save_chunks(file_id, file_buffer[file_id], listener)
 
     elif msg_type == "FILE_RECEIVED":
-        print(f"✅ Peer confirmed file {msg.get('FILEID')} was saved (STATUS: {msg.get('STATUS')}).")
+        pending_logs.put(f"✅ Peer confirmed file {msg.get('FILEID')} was saved (STATUS: {msg.get('STATUS')}).")
 
+    elif msg_type == "ACK":
+        pending_logs.put(f"📨 ACK from {from_user}: {msg['STATUS']} for {msg['MESSAGE_ID']}")
 
 def save_chunks(file_id, buffer, listener):
     downloads_dir = os.path.join(os.getcwd(), "downloads")
     os.makedirs(downloads_dir, exist_ok=True)
 
-    filepath = os.path.join(downloads_dir, buffer["filename"])
-    with open(filepath, "wb") as f:
+    filename = os.path.join(downloads_dir, buffer["filename"])
+    with open(filename, "wb") as f:
         for i in sorted(buffer["chunks"]):
             f.write(buffer["chunks"][i])
 
-    print(f"✅ File saved as {filepath}")
+    # Add to log queue
+    pending_logs.put(f"✅ File saved as {filename}")
 
+    # Send FILE_RECEIVED confirmation
     responder = FileTransferResponder(listener)
     responder.confirm_file_received(
         to_ip=buffer["sender_ip"],
@@ -67,3 +68,6 @@ def save_chunks(file_id, buffer, listener):
         to_user=buffer["from_user"],
         file_id=file_id
     )
+
+    # Immediately flush so user sees it now
+    flush_pending_logs()

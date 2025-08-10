@@ -30,14 +30,16 @@ def main():
 
     clear_screen()
 
+    # Network Core
     listener = UDPListener()
     dispatcher = Dispatcher(listener, local_profile)
 
-    start_broadcast(local_profile, listener)
+    # Start PROFILE senders loop
+    start_profile_broadcast(local_profile, listener)
 
     # Start PING senders loop (keep-alive)
     start_ping_broadcast(local_profile.user_id, listener)
-
+    
     # Start UDP listener
     listener.start(dispatcher.handle)
 

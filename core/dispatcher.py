@@ -1,4 +1,6 @@
 from handlers.ack_handler import handle_ack
+from handlers.group_handler import handle_group_message, handle_group_create, handle_group_join, handle_group_leave
+from handlers.ping_handler import handle_ping
 from handlers.file_handler import handle_file
 from handlers.profile_handler import handle_profile
 from handlers.post_handler import handle_post
@@ -66,6 +68,16 @@ class Dispatcher:
             handle_dm(msg, addr)
         elif msg_type == "ACK":
             handle_ack(msg, addr)
+        elif msg_type == "PING":
+            handle_ping(msg, addr)
+        elif msg_type == "GROUP_CREATE":
+            handle_group_create(msg, addr)
+        elif msg_type == "GROUP_JOIN":
+            handle_group_join(msg, addr)
+        elif msg_type == "GROUP_LEAVE":
+            handle_group_leave(msg, addr)
+        elif msg_type == "GROUP_MESSAGE":
+            handle_group_message(msg, addr)
         elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
             handle_file(msg, addr, self.listener, self.local_profile)
         else:

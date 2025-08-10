@@ -14,7 +14,7 @@ def parse_token(token: str):
         tuple:
             user_id (str): The user ID who generated the token.
             expiry (int): The UNIX timestamp when the token expires.
-            scope (str): The scope of the token (e.g., 'chat', 'broadcast').
+            scope (str): The scope of the token (e.g., 'chat', 'senders').
 
         If the token is incomplete, returns empty tuple.
     """
@@ -34,7 +34,7 @@ def parse_token(token: str):
     
     Args:
         token (str): The raw token string to validate.
-        expected_scope (str): The required scope (e.g., 'chat', 'broadcast').
+        expected_scope (str): The required scope (e.g., 'chat', 'senders').
     
     Returns:
         bool: 

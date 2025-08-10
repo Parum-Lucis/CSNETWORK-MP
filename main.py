@@ -1,22 +1,22 @@
 import os
-
 import questionary
-
 import config
 from core.udp_broadcast import UDPListener
 from core.dispatcher import Dispatcher
-from broadcast.profile_broadcast import start_broadcast
+from senders.profile_broadcast import start_broadcast as start_profile_broadcast
+from senders.ping_broadcast import start_broadcast as start_ping_broadcast
 from ui.cli import launch_cli, launch_main_menu
 from utils.network_utils import get_local_ip
 from utils.printer import clear_screen
 from utils.profile_utils import load_profile_from_file, save_profile_to_file
 
-
 def main():
     print("LSNP Peer Starting...\n")
 
+    # Ask verbose mode on startup
     config.VERBOSE = questionary.confirm("Enable verbose mode?").ask()
 
+    # Profile file handling
     os.makedirs("profiles", exist_ok=True)
     profile_tag = input("Enter a unique profile tag (e.g., denzel1): ").strip()
     filename = f"profiles/{profile_tag}.json"
@@ -35,8 +35,14 @@ def main():
 
     start_broadcast(local_profile, listener)
 
+    # Start PING senders loop (keep-alive)
+    start_ping_broadcast(local_profile.user_id, listener)
+
+    # Start UDP listener
+    listener.start(dispatcher.handle)
+
+    # CLI main menu
     try:
-        listener.start(dispatcher.handle)
         launch_main_menu(local_profile, listener)
     except KeyboardInterrupt:
         print("Exiting LSNP Peer...")

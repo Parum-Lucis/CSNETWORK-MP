@@ -1,16 +1,34 @@
 import os
 import config
 
+# Global session log storage
+VERBOSE_LOGS = []
+
 def verbose_log(prefix: str, message: str):
     """
-        Prints debug/log messages only if VERBOSE mode is enabled.
+    Logs debug messages to the session storage and prints if VERBOSE is enabled.
 
-        Args:
-            prefix (str): A label of the message to be printed.
-            message (str): The message body to display.
+    Args:
+        prefix (str): Label of the message.
+        message (str): Message content.
     """
+    log_entry = f"{prefix} {message}"
+    VERBOSE_LOGS.append(log_entry)
+
     if config.VERBOSE:
-        print(prefix + " " + message)
+        print(log_entry)
+
+def get_verbose_logs():
+    """
+    Returns all stored verbose log entries.
+    """
+    return VERBOSE_LOGS
+
+def clear_verbose_logs():
+    """
+    Clears the stored verbose logs.
+    """
+    VERBOSE_LOGS.clear()
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')

@@ -121,7 +121,6 @@ def launch_main_menu(profile: Profile, udp):
                 "Peer",
                 "Group",
                 "Notifications",
-                status_note,
                 "Terminate"
             ]
         ).ask()

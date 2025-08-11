@@ -12,70 +12,75 @@ Two Twins LSNP is an LSNP python implementation with richer client-side features
 
 project/
 └── src/
-├── main.py
-│ - Application entry point; initializes system components and starts the program.
-│
-├── config.py
-│ - Centralized configuration (constants, environment variables, settings).
-│
-├── core/ # Core system logic
-│ ├── ack_registry.py - Tracks acknowledgments for sent/received messages.
-│ ├── dispatcher.py - Routes incoming messages to the correct handler.
-│ ├── token_validator.py - Validates security/authentication tokens.
-│ ├── udp_broadcast.py - Sends broadcast messages over UDP.
-│ └── udp_singleton.py - Manages a single UDP listener instance.
-│
-├── handlers/ # Modules for handling specific message types
-│ ├── ack_handler.py - Processes acknowledgment messages.
-│ ├── direct_message_handler.py - Handles incoming direct/private messages.
-│ ├── file_handler.py - Handles file transfer requests and data.
-│ ├── game_handler.py - Manages multiplayer game-related messages.
-│ ├── group_handler.py - Handles group chat or group event messages.
-│ ├── ping_handler.py - Responds to ping requests to check peer status.
-│ ├── post_handler.py - Processes social post-type messages.
-│ └── profile_handler.py - Handles peer profile updates and queries.
-│
-├── senders/ # Modules for sending specific data types
-│ ├── direct_message_unicast.py - Sends a direct/private message to a specific peer.
-│ ├── game_invite_unicast.py - Sends a game invite to a specific peer.
-│ ├── group_unicast.py - Sends messages to a group of peers.
-│ ├── ping_broadcast.py - Sends ping requests to all reachable peers.
-│ ├── post_broadcast.py - Broadcasts posts to the network.
-│ └── profile_broadcast.py - Broadcasts profile updates to peers.
-│
-├── models/ # Data model definitions
-│ ├── file_transfer.py - Model for file transfer metadata and state.
-│ ├── game_session.py - Model representing an active or past game session.
-│ ├── group.py - Model for a peer group and its metadata.
-│ ├── message.py - Generic message object with metadata.
-│ └── peer.py - Model for a peer (user/device) in the network.
-│
-├── storage/ # Local persistence and caching
-│ ├── dm_store.py - Stores direct message history.
-│ ├── group_directory.py - Stores information about groups.
-│ ├── message_store.py - General message storage.
-│ ├── peer_directory.py - Keeps track of known peers.
-│ ├── post_store.py - Stores social posts.
-│ ├── revocation_list.py - Stores revoked tokens or keys.
-│ └── user_followers.py - Tracks followers/following relationships.
-│
-├── ui/ # User-facing interfaces
-│ └── cli.py - Command-line interface for interacting with the system.
-│
-└── utils/ # Helper functions and utilities
-├── base64_utils.py - Functions for Base64 encoding/decoding.
-├── message_builder.py - Functions to construct message payloads.
-├── network_utils.py - Helper functions for network-related tasks.
-├── printer.py - Utility for formatted console output/logging.
-├── profile_utils.py - Helper functions for profile operations.
-├── time_utils.py - Date/time formatting and conversion helpers.
-└── token_utils.py - Token creation, parsing, and validation helpers.		
+    ├── main.py                  # Entry point; initializes and starts the application.
+    ├── config.py                # Centralized config (constants, env vars, settings).
+
+    ├── core/                    # Core system logic modules
+    │   ├── ack_registry.py       # Tracks message acknowledgments
+    │   ├── dispatcher.py         # Routes incoming messages to handlers
+    │   ├── token_validator.py    # Validates security/auth tokens
+    │   ├── udp_broadcast.py      # Sends UDP broadcast messages
+    │   └── udp_singleton.py      # Singleton UDP listener management
+
+    ├── handlers/                # Message-specific handler modules
+    │   ├── ack_handler.py
+    │   ├── direct_message_handler.py
+    │   ├── file_handler.py
+    │   ├── game_handler.py
+    │   ├── group_handler.py
+    │   ├── ping_handler.py
+    │   ├── post_handler.py
+    │   ├── profile_handler.py
+    │   ├── like_handler.py
+    │   ├── revoke_handler.py
+    │   └── user_followers_handler.py
+
+    ├── senders/                 # Modules for sending specific data/messages
+    │   ├── direct_message_unicast.py
+    │   ├── game_invite_unicast.py
+    │   ├── group_unicast.py
+    │   ├── ping_broadcast.py
+    │   ├── post_broadcast.py
+    │   ├── profile_broadcast.py
+    │   ├── follow_unicast.py
+    │   ├── like_unlike.py
+    │   └── revoke_sender.py
+
+    ├── models/                  # Data models and domain objects
+    │   ├── file_transfer.py
+    │   ├── game_session.py
+    │   ├── group.py
+    │   ├── message.py
+    │   └── peer.py
+
+    ├── storage/                 # Local data persistence and caches
+    │   ├── dm_store.py
+    │   ├── group_directory.py
+    │   ├── message_store.py
+    │   ├── peer_directory.py
+    │   ├── post_store.py
+    │   ├── revocation_list.py
+    │   ├── user_followers.py
+    │   └── likes_store.py
+
+    ├── ui/                      # User interfaces
+    │   └── cli.py               # Command-line interface module
+
+    └── utils/                   # Helper utilities and functions
+        ├── base64_utils.py
+        ├── message_builder.py
+        ├── network_utils.py
+        ├── printer.py
+        ├── profile_utils.py
+        ├── time_utils.py
+        └── token_utils.py
+
 	
 
 ## Running the Project
 In terminal in the project directory, call python main.py
 
-Enter a user name and set verbose mode on/off
+Enter a username and set verbose mode on/off
 
 ## CLI Commands
 
@@ -84,6 +89,7 @@ Once inside the main menu, you can traverse via arrow keys/WASD and enter to int
 ### Macro-Social Features
 - POST (broadcast post to all followers)
 - CHECK FEED (read posts of following & group?)
+	- Like (Unlike)
 - PEER (All Active)
 	### One-on-One Features (select)
 	- DM
@@ -98,11 +104,16 @@ Once inside the main menu, you can traverse via arrow keys/WASD and enter to int
 	- View my Groups
 		- Send Message to Group
 - Notifications (non-verbose messaging of non-urgent messages)
+
 ### Verbose-Mode
 - Verbose Log (verbose messaging of all messages accordingly to LSNP specifications)
 - Settings: Change Post TTL (change how post TTL are declared in-client)
 - Revoke Token (enter token details to revoke)
 - Terminate (exit)
+
+
+
+
 
 
 

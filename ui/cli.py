@@ -13,7 +13,7 @@ from storage.group_directory import create_group, group_table, get_group_members
 from utils.base64_utils import encode_image_to_base64
 from utils.network_utils import get_local_ip
 from storage.peer_directory import get_peers
-from utils.printer import clear_screen
+from utils.printer import clear_screen, VERBOSE_LOGS, NOTIFICATIONS
 from utils.time_utils import wait_for_enter
 from models.file_transfer import FileTransfer
 from models.file_transfer import FileTransferResponder
@@ -288,6 +288,7 @@ def launch_main_menu(profile: Profile, udp):
                     "Check Feed",
                     "Peer",
                     "Groups",
+                    "Notifications",
                     "Terminate"
                 ]
             ).ask()
@@ -339,6 +340,12 @@ def launch_main_menu(profile: Profile, udp):
 
         elif choice == "Groups":
             group_menu(profile, udp)
+
+        elif choice == "Verbose Console":
+            print_verbose()
+
+        elif choice == "Notifications":
+            print_notifs()
 
         else:
             continue
@@ -436,3 +443,41 @@ def display_feed(profile=None, udp=None):
         send_like(profile, selected, udp, action="LIKE" if action == "Like" else "UNLIKE")
         questionary.print("✅ Done.", style="fg:green")
         wait_for_enter()
+        questionary.print(f"📭 Post from {post.get("USER_ID")}: {post.get("CONTENT")}")
+    wait_for_enter()
+
+def print_verbose():
+    while True:
+        os.system("cls" if os.name == "nt" else "clear")
+        print("=== Verbose Logs ===\n")
+        for log in VERBOSE_LOGS:
+            print(log)
+        print("\nRefreshing in 10 seconds... Press Ctrl+C to return.")
+
+        try:
+            time.sleep(10)
+            clear_screen()
+        except KeyboardInterrupt:
+            # Return to menu when Ctrl+C is pressed
+            clear_screen()
+            break
+
+        time.sleep(10)
+
+def print_notifs():
+    while True:
+        os.system("cls" if os.name == "nt" else "clear")
+        print("=== Notifications ===\n")
+        for log in NOTIFICATIONS:
+            print(log)
+        print("\nRefreshing in 10 seconds... Press Ctrl+C to return.")
+
+        try:
+            time.sleep(10)
+            clear_screen()
+        except KeyboardInterrupt:
+            # Return to menu when Ctrl+C is pressed
+            clear_screen()
+            break
+
+        time.sleep(10)

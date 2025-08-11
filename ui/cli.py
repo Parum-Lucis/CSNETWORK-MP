@@ -95,6 +95,7 @@ def process_file_offer(msg, addr, udp):
     file_size = msg.get("FILESIZE")
     ip = addr[0]
 
+    clear_screen()
     questionary.print(f"\n📥 User {from_user} is sending you a file do you accept? {file_name} ({file_size} bytes)")
     accept = questionary.confirm("Accept file?").ask()
     if accept:
@@ -129,7 +130,7 @@ def display_dm_thread(profile, peer_id: str, udp):
     for msg in thread:
         timestamp = msg.get("TIMESTAMP")
         who = "You" if msg.get("FROM") == profile.user_id else peer_id
-        questionary.print(f"[{timestamp}] {who}: {msg.get("CONTENT")}")
+        questionary.print(f"[{timestamp}] {who}: {msg.get('CONTENT')}")
 
     action = questionary.select(
             "Choose an action:",
@@ -302,6 +303,7 @@ def launch_main_menu(profile: Profile, udp):
                 choice = peer_menu()
 
                 if choice == "Send File":
+                    clear_screen()
                     file_result = file_form()
                     file_transfer = FileTransfer(
                         profile,
@@ -359,7 +361,7 @@ def select_peer(local_profile):
             questionary.print("📡 Live Peer View (auto-refreshes every 3s)", style="bold")
             peers = get_peers(active_within=300)
             peers = [p for p in peers if local_profile.user_id != p.user_id]
-
+            print(peers)
             if not peers:
                 if not waiting:
                     waiting = True
@@ -416,7 +418,7 @@ def display_feed():
         return
 
     for post in posts:
-        questionary.print(f"📭 Post from {post.get("USER_ID")}: {post.get("CONTENT")}")
+        questionary.print(f"📭 Post from {post.get('USER_ID')}: {post.get('CONTENT')}")
     wait_for_enter()
 
 def print_verbose():

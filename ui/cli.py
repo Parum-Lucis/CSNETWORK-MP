@@ -289,6 +289,7 @@ def launch_main_menu(profile: Profile, udp):
                     "Peer",
                     "Groups",
                     "Notifications",
+                    "Settings: Change Post TTL",
                     "Terminate"
                 ]
             ).ask()

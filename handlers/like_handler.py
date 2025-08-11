@@ -28,10 +28,10 @@ def handle_like(msg, addr):
         return
     
     post_ts_i = int(post_ts)
-    if not has_post(to_user, post_ts_i):
-        verbose_log("LIKE", f"Ignored like for unknown post {post_ts_i} -> {to_user} - {current_unix_time()}")
-        notif_log(f"Ignored like for unknown post {post_ts_i} -> {to_user}")
-        return
+    # if not has_post(to_user, post_ts_i):
+    #     verbose_log("LIKE", f"Ignored like for unknown post {post_ts_i} -> {to_user} - {current_unix_time()}")
+    #     notif_log(f"Ignored like for unknown post {post_ts_i} -> {to_user}")
+    #     return
     
     if action == "LIKE":
         add_like(to_user, post_ts_i, from_user)

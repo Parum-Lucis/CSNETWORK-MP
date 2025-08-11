@@ -132,25 +132,41 @@ def group_menu(local_profile, udp_listener):
         elif choice == "Back to Main Menu":
             break
 
-
 def create_group_cli(local_profile, udp_listener):
+    # Generate random group ID
     group_id = f"group_{uuid.uuid4().hex[:8]}"
+
+    # Ask for group name
     group_name = questionary.text("Enter a group name:").ask()
-    members_str = questionary.text("Enter comma-separated member IDs:").ask()
-    members = [m.strip() for m in members_str.split(",") if m.strip()]
 
-    # Add yourself if not already included
-    if local_profile.user_id not in members:
-        members.append(local_profile.user_id)
+    # Get active peers (excluding yourself)
+    peers = [p for p in get_peers(active_within=300) if p.user_id != local_profile.user_id]
 
-    create_group(group_id, group_name, members)
+    if not peers:
+        print("⚠ No active peers to add right now.")
+        return
 
-    # Broadcast GROUP_CREATE message
-    msg = build_group_create(local_profile, group_id, group_name, members)
+    # Let user select peers to add
+    selected_users = questionary.checkbox(
+        "Select members to add:",
+        choices=[f"{p.display_name} ({p.user_id})" for p in peers]
+    ).ask()
+
+    # Map selection back to user IDs
+    selected_ids = [p.user_id for p in peers if f"{p.display_name} ({p.user_id})" in selected_users]
+
+    # Always include yourself
+    if local_profile.user_id not in selected_ids:
+        selected_ids.append(local_profile.user_id)
+
+    # Create group locally
+    create_group(group_id, group_name, selected_ids)
+
+    # Broadcast GROUP_CREATE
+    msg = build_group_create(local_profile, group_id, group_name, selected_ids)
     udp_listener.send_broadcast(msg)
 
-    print(f"✅ Group '{group_name}' created with members: {', '.join(members)}")
-
+    print(f"✅ Group '{group_name}' created with members: {', '.join(selected_ids)}")
 
 def view_groups_cli():
     if not group_table:

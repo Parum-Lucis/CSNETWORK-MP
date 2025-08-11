@@ -35,3 +35,22 @@ def get_broadcast_ip() -> str:
 
     except Exception:
         return '255.255.255.255'
+
+
+def verify_sender_ip(msg: dict, addr: tuple) -> bool:
+    """
+    Checks if the IP in the FROM field matches the actual UDP sender IP.
+
+    Args:
+        msg (dict): Parsed LSNP message.
+        addr (tuple): (ip, port) from UDP socket.
+
+    Returns:
+        bool: True if IP matches, False if spoof detected.
+    """
+    from_field = msg.get("FROM", "")
+    if "@" not in from_field:
+        return False  # malformed FROM
+    declared_ip = from_field.split("@")[1]
+    actual_ip = addr[0]
+    return declared_ip == actual_ip

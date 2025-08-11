@@ -4,10 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features">
+    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="added cli verbose console route">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/dispatcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/dispatcher.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/senders/group_unicast.py" beforeDir="false" afterPath="$PROJECT_DIR$/senders/group_unicast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/storage/group_directory.py" beforeDir="false" afterPath="$PROJECT_DIR$/storage/group_directory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/network_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/network_utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,7 +90,8 @@
       <workItem from="1754274786975" duration="3624000" />
       <workItem from="1754319743122" duration="7788000" />
       <workItem from="1754797857929" duration="13866000" />
-      <workItem from="1754839930191" duration="5814000" />
+      <workItem from="1754839930191" duration="6779000" />
+      <workItem from="1754875921743" duration="2051000" />
     </task>
     <task id="LOCAL-00001" summary="s">
       <option name="closed" value="true" />
@@ -209,7 +213,15 @@
       <option name="project" value="LOCAL" />
       <updated>1754828805205</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="added cli verbose console route">
+      <option name="closed" value="true" />
+      <created>1754847407704</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1754847407704</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -242,16 +254,12 @@
     <MESSAGE value="Dynamically finds IP" />
     <MESSAGE value="Added the Ping/Profile broadcasts.&#10;&#10;Change CLI to have a verbose/non-verbose mode such that all verbose is saved in a global VERBOSE array to store all messages received during a session&#10;&#10;Refactored Tokenization" />
     <MESSAGE value="renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features" />
-    <option name="LAST_COMMIT_MESSAGE" value="renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features" />
+    <MESSAGE value="added cli verbose console route" />
+    <option name="LAST_COMMIT_MESSAGE" value="added cli verbose console route" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/handlers/post_handler.py</url>
-          <line>3</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/models/file_transfer.py</url>
           <option name="timeStamp" value="2" />

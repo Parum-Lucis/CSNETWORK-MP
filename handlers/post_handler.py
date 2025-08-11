@@ -1,5 +1,5 @@
 from core.token_validator import validate_token, parse_token
-from storage.user_followers import is_follower
+from storage.user_followers import is_following
 from storage.post_store import save_post
 from utils.printer import verbose_log, notif_log
 from utils.time_utils import current_unix_time
@@ -31,7 +31,7 @@ def handle_post(msg, addr, local_user):
     #     print(f"\n\nPoster IP mismatch\n\n")
     #     return
     
-    if not is_follower(poster_id) and poster_id != local_user.user_id:
+    if not is_following(poster_id) and poster_id != local_user.user_id:
         verbose_log("DROP!", f"Expired/Rejected post uploaded by {poster_id} (Not a Follower): {content} - {current_unix_time()}")
         notif_log(f"Receiver is not a follower of Sender")
         return

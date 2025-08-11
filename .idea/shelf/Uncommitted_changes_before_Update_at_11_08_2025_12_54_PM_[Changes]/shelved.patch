@@ -1,0 +1,241 @@
+Index: senders/post_broadcast.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import config\r\nfrom utils.message_builder import generate_message_id\r\nfrom utils.token_utils import generate_token\r\nfrom storage.post_store import save_post\r\nfrom utils.printer import verbose_log\r\nfrom utils.time_utils import current_unix_time\r\n\r\ndef send_post(profile, content: str, udp):\r\n    message_id = generate_message_id()\r\n    token = generate_token(profile.user_id, config.token_ttl_post, \"broadcast\")\r\n\r\n    post = {\r\n        \"TYPE\": \"POST\",\r\n        \"USER_ID\": profile.user_id,\r\n        \"CONTENT\": content,\r\n        \"TTL\": config.token_ttl_post,\r\n        \"MESSAGE_ID\": message_id,\r\n        \"TOKEN\": token\r\n    }\r\n\r\n    verbose_log(\"POST\", f\"Post uploaded by {profile.user_id}: {content} - {current_unix_time()}\")\r\n    print(f\"\\n\\nPost uploaded by {profile.user_id}: {content}\\n\\n\")\r\n\r\n    post_lines = [f\"{k}: {v}\" for k, v in post.items()]\r\n    udp.send_broadcast(\"\\n\".join(post_lines) + \"\\n\\n\")\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/senders/post_broadcast.py b/senders/post_broadcast.py
+--- a/senders/post_broadcast.py	(revision 83ee353bec23bb7777c9e6e5e4e2d1c4381c801f)
++++ b/senders/post_broadcast.py	(date 1754887538871)
+@@ -2,7 +2,7 @@
+ from utils.message_builder import generate_message_id
+ from utils.token_utils import generate_token
+ from storage.post_store import save_post
+-from utils.printer import verbose_log
++from utils.printer import verbose_log, notif_log
+ from utils.time_utils import current_unix_time
+ 
+ def send_post(profile, content: str, udp):
+@@ -19,7 +19,7 @@
+     }
+ 
+     verbose_log("POST", f"Post uploaded by {profile.user_id}: {content} - {current_unix_time()}")
+-    print(f"\n\nPost uploaded by {profile.user_id}: {content}\n\n")
++    notif_log(f"Post uploaded by {profile.user_id}: {content}")
+ 
+     post_lines = [f"{k}: {v}" for k, v in post.items()]
+     udp.send_broadcast("\n".join(post_lines) + "\n\n")
+Index: ui/cli.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import sys\r\nimport time\r\nimport os\r\nimport uuid\r\n\r\nimport questionary\r\nfrom queue import Queue\r\n\r\nimport config\r\nfrom models.peer import Profile\r\nfrom senders.group_unicast import build_group_update, build_group_create, build_group_message\r\nfrom storage.group_directory import create_group, group_table, get_group_members, get_group_name\r\nfrom utils.base64_utils import encode_image_to_base64\r\nfrom utils.network_utils import get_local_ip\r\nfrom storage.peer_directory import get_peers\r\nfrom utils.printer import clear_screen\r\nfrom utils.time_utils import wait_for_enter\r\nfrom models.file_transfer import FileTransfer\r\nfrom models.file_transfer import FileTransferResponder\r\nfrom storage.post_store import get_recent_posts\r\n\r\n# ===============================\r\n# Queues shared with background handlers\r\n# ===============================\r\npending_file_offers = Queue()  # For file offers requiring user action\r\npending_logs = Queue()         # For async logs (ACKs, file saved, warnings, etc.)\r\n\r\ndef launch_cli() -> Profile:\r\n    \"\"\"\r\n    CLI prompt to create a new profile.\r\n    \"\"\"\r\n    print(\"No saved profile found. Let's create one!\\n\")\r\n\r\n    display_name = questionary.text(\"Enter your display name:\").ask()\r\n    user_id = f\"{display_name.lower()}@{get_local_ip()}\"\r\n\r\n    avatar_type = None\r\n    avatar_data = None\r\n\r\n    use_avatar = questionary.confirm(\"Would you like to add an avatar?\").ask()\r\n    if use_avatar:\r\n        avatar_path = questionary.path(\"Enter path to image file (PNG, JPG under 10KB):\").ask()\r\n        result = encode_image_to_base64(avatar_path)\r\n        if result:\r\n            avatar_type, avatar_data = result\r\n        else:\r\n            print(\"Failed to load avatar. Proceeding without it.\")\r\n\r\n    return Profile(\r\n        user_id=user_id,\r\n        ip=get_local_ip(),\r\n        display_name=display_name,\r\n        status=\"Online\",\r\n        avatar_type=avatar_type,\r\n        avatar_data=avatar_data\r\n    )\r\n\r\ndef file_form():\r\n    \"\"\"\r\n    Prompts user for file location, name override, and description.\r\n    \"\"\"\r\n    answers = {}\r\n    try:\r\n        while True:\r\n            file_loc = questionary.text(\"Enter the file location\").ask()\r\n\r\n            if os.path.isfile(file_loc):\r\n                answers[\"file_location\"] = file_loc\r\n                answers[\"file_name\"] = questionary.text(\"Enter the file name to use (empty to use the default)\").ask()\r\n                answers[\"description\"] = questionary.text(\"Enter the file description: \").ask()\r\n            else:\r\n                questionary.print(\"❌ The file entered does not exist.\", style=\"bold fg:red\")\r\n                continue\r\n            return answers\r\n    except KeyboardInterrupt:\r\n        return None\r\n\r\ndef flush_pending_logs():\r\n    \"\"\"Flush any logs from the pending_logs queue to the terminal immediately.\"\"\"\r\n    while not pending_logs.empty():\r\n        log = pending_logs.get()\r\n        questionary.print(log, style=\"fg:yellow\")\r\n\r\ndef process_file_offer(msg, addr, udp):\r\n    \"\"\"\r\n    Handles a pending file offer from the queue.\r\n    \"\"\"\r\n    from_user = msg.get(\"FROM\")\r\n    file_name = msg.get(\"FILENAME\")\r\n    file_size = msg.get(\"FILESIZE\")\r\n    ip = addr[0]\r\n\r\n    print(f\"\\n\uD83D\uDCE5 User {from_user} is sending you a file do you accept? {file_name} ({file_size} bytes)\")\r\n    accept = questionary.confirm(\"Accept file?\").ask()\r\n    if accept:\r\n        from models.file_transfer import FileTransferResponder\r\n        responder = FileTransferResponder(udp)\r\n        responder.accept_file_offer(\r\n            to_ip=ip,\r\n            file_id=msg[\"FILEID\"]\r\n        )\r\n    else:\r\n        print(\"❌ File offer declined.\")\r\n\r\n    # Flush any logs that may have appeared during this process\r\n    flush_pending_logs()\r\n\r\ndef group_menu(local_profile, udp_listener):\r\n    \"\"\"\r\n    Main Group Menu\r\n    \"\"\"\r\n    while True:\r\n        choice = questionary.select(\r\n            \"Group Menu:\",\r\n            choices=[\r\n                \"Create Group\",\r\n                \"View My Groups\",\r\n                \"Send Message to Group\",\r\n                \"Back to Main Menu\"\r\n            ]\r\n        ).ask()\r\n\r\n        if choice == \"Create Group\":\r\n            create_group_cli(local_profile, udp_listener)\r\n\r\n        elif choice == \"View My Groups\":\r\n            view_groups_cli()\r\n\r\n        elif choice == \"Send Message to Group\":\r\n            send_group_message_cli(local_profile, udp_listener)\r\n\r\n        elif choice == \"Back to Main Menu\":\r\n            break\r\n\r\ndef create_group_cli(local_profile, udp_listener):\r\n    # Generate random group ID\r\n    group_id = f\"group_{uuid.uuid4().hex[:8]}\"\r\n\r\n    # Ask for group name\r\n    group_name = questionary.text(\"Enter a group name:\").ask()\r\n\r\n    # Get active peers (excluding yourself)\r\n    peers = [p for p in get_peers(active_within=300) if p.user_id != local_profile.user_id]\r\n\r\n    if not peers:\r\n        print(\"⚠ No active peers to add right now.\")\r\n        return\r\n\r\n    # Let user select peers to add\r\n    selected_users = questionary.checkbox(\r\n        \"Select members to add:\",\r\n        choices=[f\"{p.display_name} ({p.user_id})\" for p in peers]\r\n    ).ask()\r\n\r\n    # Map selection back to user IDs\r\n    selected_ids = [p.user_id for p in peers if f\"{p.display_name} ({p.user_id})\" in selected_users]\r\n\r\n    # Always include yourself\r\n    if local_profile.user_id not in selected_ids:\r\n        selected_ids.append(local_profile.user_id)\r\n\r\n    # Create group locally\r\n    create_group(group_id, group_name, selected_ids)\r\n\r\n    # Broadcast GROUP_CREATE\r\n    msg = build_group_create(local_profile, group_id, group_name, selected_ids)\r\n    udp_listener.send_broadcast(msg)\r\n\r\n    print(f\"✅ Group '{group_name}' created with members: {', '.join(selected_ids)}\")\r\n\r\ndef view_groups_cli():\r\n    if not group_table:\r\n        print(\"No groups found.\")\r\n        return\r\n\r\n    for gid, data in group_table.items():\r\n        print(f\"\\n\uD83D\uDCCC {data['name']} ({gid})\")\r\n        print(\"Members:\")\r\n        for member in sorted(data[\"members\"]):\r\n            print(f\" - {member}\")\r\n\r\n\r\ndef send_group_message_cli(local_profile, udp_listener):\r\n    if not group_table:\r\n        print(\"No groups to send messages to.\")\r\n        return\r\n\r\n    # Choose a group\r\n    gid = questionary.select(\r\n        \"Select a group:\",\r\n        choices=[gid for gid in group_table.keys()]\r\n    ).ask()\r\n\r\n    content = questionary.text(\"Enter your message:\").ask()\r\n\r\n    msg = build_group_message(local_profile, gid, content)\r\n\r\n    # Send to each group member except self\r\n    for member in get_group_members(gid):\r\n        if member != local_profile.user_id:\r\n            member_ip = member.split(\"@\")[1]\r\n            udp_listener.send_unicast(msg, member_ip)\r\n\r\n    print(f\"\uD83D\uDCE4 Message sent to group '{get_group_name(gid)}'.\")\r\n\r\n\r\n\r\ndef launch_main_menu(profile: Profile, udp):\r\n    while True:\r\n        # ✅ Flush background logs\r\n        flush_pending_logs()\r\n\r\n        # ✅ Process pending file offers before showing menu\r\n        while not pending_file_offers.empty():\r\n            msg, addr = pending_file_offers.get()\r\n            process_file_offer(msg, addr, udp)\r\n\r\n        console = \"(Verbose ON)\" if config.VERBOSE else \"\"\r\n\r\n        if config.VERBOSE:\r\n            choice = questionary.select(\r\n                \"Select an option:\",\r\n                choices=[\r\n                    \"Post\",\r\n                    \"Check Feed\",\r\n                    \"Peer\",\r\n                    \"Groups\",\r\n                    \"Notifications\",\r\n                    \"Verbose Console\",\r\n                    \"Settings: Change Post TTL\",\r\n                    \"Revoke Token\",\r\n                    \"Terminate\"\r\n                ]\r\n            ).ask()\r\n\r\n        else:\r\n            choice = questionary.select(\r\n                \"Select an option:\",\r\n                choices=[\r\n                    \"Post\",\r\n                    \"Check Feed\",\r\n                    \"Peer\",\r\n                    \"Groups\",\r\n                    \"Terminate\"\r\n                ]\r\n            ).ask()\r\n\r\n        if choice == \"Terminate\":\r\n            questionary.print(\"\uD83D\uDC4B Goodbye.\", style=\"bold fg:green\")\r\n            time.sleep(1)\r\n            sys.exit(0)\r\n\r\n        elif choice == \"Peer\":\r\n            selected = select_peer(profile)\r\n            if selected:\r\n                choice = peer_menu()\r\n\r\n                if choice == \"Send File\":\r\n                    file_result = file_form()\r\n                    file_transfer = FileTransfer(\r\n                        profile,\r\n                        selected,\r\n                        file_result[\"file_location\"],\r\n                        file_result[\"description\"],\r\n                        udp,\r\n                        file_result[\"file_name\"]\r\n                    )\r\n                    file_transfer.file_offer()\r\n\r\n        elif choice == \"Settings: Change Post TTL\":\r\n            new_post_ttl = questionary.text(f\"Enter new Post TTL in seconds (current {config.token_ttl_post}): \").ask()\r\n\r\n            try:\r\n                config.token_ttl_post = int(new_post_ttl)\r\n                questionary.print(f\"✅ Post TTL updated to {new_post_ttl} seconds.\", style=\"fg:green\")\r\n            except ValueError:\r\n                questionary.print(f\"❌ Invalid number. TTL not changed.\", style=\"fg=red\")\r\n\r\n        elif choice == \"Post\":\r\n            content = questionary.text(\"Enter your post content:\").ask()\r\n            from senders.post_broadcast import send_post\r\n            send_post(profile, content, udp)\r\n\r\n        elif choice == \"Check Feed\":\r\n            display_feed()\r\n\r\n        elif choice == \"Groups\":\r\n            group_menu(profile, udp)\r\n\r\n        else:\r\n            continue\r\n\r\ndef select_peer(local_profile):\r\n    \"\"\"\r\n    Shows a list of available peers and allows user to select one.\r\n    \"\"\"\r\n    try:\r\n        waiting = False\r\n        while True:\r\n            clear_screen()\r\n            questionary.print(\"\uD83D\uDCE1 Live Peer View (auto-refreshes every 3s)\", style=\"bold\")\r\n            peers = get_peers(active_within=300)\r\n            peers = [p for p in peers]\r\n\r\n            if not peers:\r\n                if not waiting:\r\n                    waiting = True\r\n                    questionary.print(\"\uD83D\uDE15 No other peers online. Waiting...\", style=\"fg:yellow\")\r\n                time.sleep(3)\r\n                continue\r\n\r\n            waiting = False\r\n            choices = [\r\n                questionary.Choice(\r\n                    title=f\"{peer.display_name} ({peer.status}) @ {peer.ip}\",\r\n                    value=peer\r\n                ) for peer in peers\r\n            ]\r\n            choices.append(\"↩ Return to menu\")\r\n\r\n            selected = questionary.select(\r\n                \"\uD83D\uDCE1 Choose a peer to connect:\",\r\n                choices=choices\r\n            ).ask()\r\n\r\n            if selected == \"↩ Return to menu\" or selected is None:\r\n                return None\r\n            return selected\r\n    except KeyboardInterrupt:\r\n        return None\r\n\r\ndef peer_menu():\r\n    \"\"\"\r\n    Menu for selecting operations for a specific peer.\r\n    \"\"\"\r\n    while True:\r\n        choice = questionary.select(\r\n            \"Select an operation to run:\",\r\n            choices=[\r\n                \"DM\",\r\n                \"Follow\",\r\n                \"Unfollow\",\r\n                \"Send File\",\r\n                \"↩ Return to menu\"\r\n            ]\r\n        ).ask()\r\n\r\n        if choice == \"↩ Return to menu\" or choice is None:\r\n            return None\r\n        return choice\r\n    \r\ndef display_feed():\r\n    posts = get_recent_posts()\r\n    if not posts:\r\n        questionary.print(\"\uD83D\uDCED No posts to show.\", style=\"fg:yellow\")\r\n        wait_for_enter()\r\n        return\r\n\r\n    for post in posts:\r\n        questionary.print(f\"\uD83D\uDCED Post from {post.get(\"USER_ID\")}: {post.get(\"CONTENT\")}\")\r\n    wait_for_enter()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/ui/cli.py b/ui/cli.py
+--- a/ui/cli.py	(revision 83ee353bec23bb7777c9e6e5e4e2d1c4381c801f)
++++ b/ui/cli.py	(date 1754887907097)
+@@ -13,7 +13,7 @@
+ from utils.base64_utils import encode_image_to_base64
+ from utils.network_utils import get_local_ip
+ from storage.peer_directory import get_peers
+-from utils.printer import clear_screen
++from utils.printer import clear_screen, VERBOSE_LOGS, NOTIFICATIONS
+ from utils.time_utils import wait_for_enter
+ from models.file_transfer import FileTransfer
+ from models.file_transfer import FileTransferResponder
+@@ -241,6 +241,7 @@
+                     "Check Feed",
+                     "Peer",
+                     "Groups",
++                    "Notifications",
+                     "Terminate"
+                 ]
+             ).ask()
+@@ -287,6 +288,12 @@
+         elif choice == "Groups":
+             group_menu(profile, udp)
+ 
++        elif choice == "Verbose Console":
++            print_verbose()
++
++        elif choice == "Notifications":
++            print_notifs()
++
+         else:
+             continue
+ 
+@@ -358,4 +365,40 @@
+ 
+     for post in posts:
+         questionary.print(f"📭 Post from {post.get("USER_ID")}: {post.get("CONTENT")}")
+-    wait_for_enter()
+\ No newline at end of file
++    wait_for_enter()
++
++def print_verbose():
++    while True:
++        os.system("cls" if os.name == "nt" else "clear")
++        print("=== Verbose Logs ===\n")
++        for log in VERBOSE_LOGS:
++            print(log)
++        print("\nRefreshing in 10 seconds... Press Ctrl+C to return.")
++
++        try:
++            time.sleep(10)
++            clear_screen()
++        except KeyboardInterrupt:
++            # Return to menu when Ctrl+C is pressed
++            clear_screen()
++            break
++
++        time.sleep(10)
++
++def print_notifs():
++    while True:
++        os.system("cls" if os.name == "nt" else "clear")
++        print("=== Notifications ===\n")
++        for log in NOTIFICATIONS:
++            print(log)
++        print("\nRefreshing in 10 seconds... Press Ctrl+C to return.")
++
++        try:
++            time.sleep(10)
++            clear_screen()
++        except KeyboardInterrupt:
++            # Return to menu when Ctrl+C is pressed
++            clear_screen()
++            break
++
++        time.sleep(10)
+Index: utils/printer.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import os\r\nimport config\r\n\r\n# Global session log storage\r\nVERBOSE_LOGS = []\r\n\r\ndef verbose_log(prefix: str, message: str):\r\n    \"\"\"\r\n    Logs debug messages to the session storage and prints if VERBOSE is enabled.\r\n\r\n    Args:\r\n        prefix (str): Label of the message.\r\n        message (str): Message content.\r\n    \"\"\"\r\n    log_entry = f\"{prefix} {message}\"\r\n    VERBOSE_LOGS.append(log_entry)\r\n\r\n    if config.VERBOSE:\r\n        print(log_entry)\r\n\r\ndef get_verbose_logs():\r\n    \"\"\"\r\n    Returns all stored verbose log entries.\r\n    \"\"\"\r\n    return VERBOSE_LOGS\r\n\r\ndef clear_verbose_logs():\r\n    \"\"\"\r\n    Clears the stored verbose logs.\r\n    \"\"\"\r\n    VERBOSE_LOGS.clear()\r\n\r\ndef clear_screen():\r\n    os.system('cls' if os.name == 'nt' else 'clear')
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/utils/printer.py b/utils/printer.py
+--- a/utils/printer.py	(revision 83ee353bec23bb7777c9e6e5e4e2d1c4381c801f)
++++ b/utils/printer.py	(date 1754886534580)
+@@ -3,6 +3,7 @@
+ 
+ # Global session log storage
+ VERBOSE_LOGS = []
++NOTIFICATIONS = []
+ 
+ def verbose_log(prefix: str, message: str):
+     """
+@@ -15,9 +16,6 @@
+     log_entry = f"{prefix} {message}"
+     VERBOSE_LOGS.append(log_entry)
+ 
+-    if config.VERBOSE:
+-        print(log_entry)
+-
+ def get_verbose_logs():
+     """
+     Returns all stored verbose log entries.
+@@ -30,5 +28,27 @@
+     """
+     VERBOSE_LOGS.clear()
+ 
++def notif_log(message: str):
++    """
++    Logs debug messages to the session storage and prints if VERBOSE is enabled.
++
++    Args:
++        message (str): Message content.
++    """
++    log_entry = f"{message}"
++    NOTIFICATIONS.append(log_entry)
++
++def get_notif():
++    """
++    Returns all stored verbose log entries.
++    """
++    return NOTIFICATIONS
++
++def clear_notif():
++    """
++    Clears the stored verbose logs.
++    """
++    NOTIFICATIONS.clear()
++
+ def clear_screen():
+     os.system('cls' if os.name == 'nt' else 'clear')
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"9924877d-972b-4f4f-95ff-c0c9b368cdb6\" name=\"Changes\" comment=\"added cli verbose console route\">\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/core/dispatcher.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/core/dispatcher.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/senders/group_unicast.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/senders/group_unicast.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/storage/group_directory.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/storage/group_directory.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/ui/cli.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/ui/cli.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/utils/network_utils.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/utils/network_utils.py\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"FileTemplateManagerImpl\">\r\n    <option name=\"RECENT_TEMPLATES\">\r\n      <list>\r\n        <option value=\"Python Script\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"GitHubPullRequestSearchHistory\">{\r\n  &quot;lastFilter&quot;: {\r\n    &quot;state&quot;: &quot;OPEN&quot;,\r\n    &quot;assignee&quot;: &quot;Parum-Lucis&quot;\r\n  }\r\n}</component>\r\n  <component name=\"GithubPullRequestsUISettings\">{\r\n  &quot;selectedUrlAndAccountId&quot;: {\r\n    &quot;url&quot;: &quot;https://github.com/Parum-Lucis/CSNETWORK-MP.git&quot;,\r\n    &quot;accountId&quot;: &quot;34005450-7e8f-425f-984b-5b635c13e8d4&quot;\r\n  }\r\n}</component>\r\n  <component name=\"ProjectColorInfo\">{\r\n  &quot;associatedIndex&quot;: 3\r\n}</component>\r\n  <component name=\"ProjectId\" id=\"30ilbcsO0cIwkEnkjGCt6DgvmLR\" />\r\n  <component name=\"ProjectLevelVcsManager\" settingsEditedManually=\"true\" />\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\">{\r\n  &quot;keyToString&quot;: {\r\n    &quot;Python.config.executor&quot;: &quot;Run&quot;,\r\n    &quot;Python.main.executor&quot;: &quot;Run&quot;,\r\n    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,\r\n    &quot;git-widget-placeholder&quot;: &quot;master&quot;,\r\n    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,\r\n    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,\r\n    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,\r\n    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,\r\n    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,\r\n    &quot;settings.editor.selected.configurable&quot;: &quot;terminal&quot;,\r\n    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;\r\n  }\r\n}</component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"MoveFile.RECENT_KEYS\">\r\n      <recent name=\"C:\\Users\\ROG Strix\\PycharmProjects\\CSNETWORK MP\\broadcast\" />\r\n      <recent name=\"C:\\Users\\ROG Strix\\PycharmProjects\\CSNETWORK MP\\ui\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"SharedIndexes\">\r\n    <attachedChunks>\r\n      <set>\r\n        <option value=\"bundled-js-predefined-d6986cc7102b-7c0b70fcd90d-JavaScript-PY-242.21829.153\" />\r\n        <option value=\"bundled-python-sdk-464836ebc622-b74155a9e76b-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.21829.153\" />\r\n      </set>\r\n    </attachedChunks>\r\n  </component>\r\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"9924877d-972b-4f4f-95ff-c0c9b368cdb6\" name=\"Changes\" comment=\"\" />\r\n      <created>1754118346878</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1754118346878</updated>\r\n      <workItem from=\"1754118348274\" duration=\"22497000\" />\r\n      <workItem from=\"1754195930933\" duration=\"22802000\" />\r\n      <workItem from=\"1754274786975\" duration=\"3624000\" />\r\n      <workItem from=\"1754319743122\" duration=\"7788000\" />\r\n      <workItem from=\"1754797857929\" duration=\"13866000\" />\r\n      <workItem from=\"1754839930191\" duration=\"6779000\" />\r\n      <workItem from=\"1754875921743\" duration=\"2051000\" />\r\n    </task>\r\n    <task id=\"LOCAL-00001\" summary=\"s\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754118426924</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754118426924</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00002\" summary=\"structure\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754121020983</created>\r\n      <option name=\"number\" value=\"00002\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754121020983</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00003\" summary=\"requirements\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754121781310</created>\r\n      <option name=\"number\" value=\"00003\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754121781310</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00004\" summary=\"MILESTONE 1 w/ documentation\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754135595154</created>\r\n      <option name=\"number\" value=\"00004\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00004\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754135595154</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00005\" summary=\"MILESTONE 1 w/ config\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754136711815</created>\r\n      <option name=\"number\" value=\"00005\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00005\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754136711815</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00006\" summary=\"MILESTONE 1 w/ optional work\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754137941284</created>\r\n      <option name=\"number\" value=\"00006\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00006\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754137941284</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00007\" summary=\"idk what i added\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754149391042</created>\r\n      <option name=\"number\" value=\"00007\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00007\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754149391042</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00008\" summary=\"Added CLI Functionality\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754227452533</created>\r\n      <option name=\"number\" value=\"00008\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00008\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754227452533</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00009\" summary=\"Added Verbose Mode\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754234363356</created>\r\n      <option name=\"number\" value=\"00009\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00009\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754234363356</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00010\" summary=\"Added Group docu\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754234410383</created>\r\n      <option name=\"number\" value=\"00010\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00010\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754234410383</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00011\" summary=\"Added ACK messaging&#10;Refactored udp class to be used as a singleton\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754239319315</created>\r\n      <option name=\"number\" value=\"00011\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00011\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754239319315</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00012\" summary=\"Fixed Verbose bug\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754239488372</created>\r\n      <option name=\"number\" value=\"00012\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00012\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754239488372</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00013\" summary=\"Dynamically finds IP\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754327506704</created>\r\n      <option name=\"number\" value=\"00013\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00013\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754327506704</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00014\" summary=\"Added the Ping/Profile broadcasts.&#10;&#10;Change CLI to have a verbose/non-verbose mode such that all verbose is saved in a global VERBOSE array to store all messages received during a session&#10;&#10;Refactored Tokenization\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754819787032</created>\r\n      <option name=\"number\" value=\"00014\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00014\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754819787032</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00015\" summary=\"renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754828805205</created>\r\n      <option name=\"number\" value=\"00015\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00015\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754828805205</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00016\" summary=\"added cli verbose console route\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1754847407704</created>\r\n      <option name=\"number\" value=\"00016\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00016\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1754847407704</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"17\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"TypeScriptGeneratedFilesManager\">\r\n    <option name=\"version\" value=\"3\" />\r\n  </component>\r\n  <component name=\"Vcs.Log.Tabs.Properties\">\r\n    <option name=\"TAB_STATES\">\r\n      <map>\r\n        <entry key=\"MAIN\">\r\n          <value>\r\n            <State />\r\n          </value>\r\n        </entry>\r\n      </map>\r\n    </option>\r\n  </component>\r\n  <component name=\"VcsManagerConfiguration\">\r\n    <MESSAGE value=\"s\" />\r\n    <MESSAGE value=\"structure\" />\r\n    <MESSAGE value=\"requirements\" />\r\n    <MESSAGE value=\"MILESTONE 1 w/ documentation\" />\r\n    <MESSAGE value=\"MILESTONE 1 w/ config\" />\r\n    <MESSAGE value=\"MILESTONE 1 w/ optional work\" />\r\n    <MESSAGE value=\"idk what i added\" />\r\n    <MESSAGE value=\"Added CLI Functionality\" />\r\n    <MESSAGE value=\"Added Verbose Mode\" />\r\n    <MESSAGE value=\"Added Group docu\" />\r\n    <MESSAGE value=\"Added ACK messaging&#10;Refactored udp class to be used as a singleton\" />\r\n    <MESSAGE value=\"Fixed Verbose bug\" />\r\n    <MESSAGE value=\"Dynamically finds IP\" />\r\n    <MESSAGE value=\"Added the Ping/Profile broadcasts.&#10;&#10;Change CLI to have a verbose/non-verbose mode such that all verbose is saved in a global VERBOSE array to store all messages received during a session&#10;&#10;Refactored Tokenization\" />\r\n    <MESSAGE value=\"renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features\" />\r\n    <MESSAGE value=\"added cli verbose console route\" />\r\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"added cli verbose console route\" />\r\n  </component>\r\n  <component name=\"XDebuggerManager\">\r\n    <breakpoint-manager>\r\n      <breakpoints>\r\n        <line-breakpoint enabled=\"true\" suspend=\"THREAD\" type=\"python-line\">\r\n          <url>file://$PROJECT_DIR$/models/file_transfer.py</url>\r\n          <option name=\"timeStamp\" value=\"2\" />\r\n        </line-breakpoint>\r\n      </breakpoints>\r\n    </breakpoint-manager>\r\n  </component>\r\n  <component name=\"com.intellij.coverage.CoverageDataManagerImpl\">\r\n    <SUITE FILE_PATH=\"coverage/CSNETWORK_MP$config.coverage\" NAME=\"config Coverage Results\" MODIFIED=\"1754137522422\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\r\n    <SUITE FILE_PATH=\"coverage/CSNETWORK_MP$main.coverage\" NAME=\"main Coverage Results\" MODIFIED=\"1754225016861\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 83ee353bec23bb7777c9e6e5e4e2d1c4381c801f)
++++ b/.idea/workspace.xml	(date 1754887810511)
+@@ -4,13 +4,11 @@
+     <option name="autoReloadType" value="SELECTIVE" />
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="added cli verbose console route">
++    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="Add questionary to interactively select peers for group create">
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/core/dispatcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/dispatcher.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/senders/group_unicast.py" beforeDir="false" afterPath="$PROJECT_DIR$/senders/group_unicast.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/storage/group_directory.py" beforeDir="false" afterPath="$PROJECT_DIR$/storage/group_directory.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/senders/post_broadcast.py" beforeDir="false" afterPath="$PROJECT_DIR$/senders/post_broadcast.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/ui/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/utils/network_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/network_utils.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/utils/printer.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/printer.py" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -91,7 +89,8 @@
+       <workItem from="1754319743122" duration="7788000" />
+       <workItem from="1754797857929" duration="13866000" />
+       <workItem from="1754839930191" duration="6779000" />
+-      <workItem from="1754875921743" duration="2051000" />
++      <workItem from="1754875921743" duration="2856000" />
++      <workItem from="1754883801846" duration="3824000" />
+     </task>
+     <task id="LOCAL-00001" summary="s">
+       <option name="closed" value="true" />
+@@ -221,7 +220,23 @@
+       <option name="project" value="LOCAL" />
+       <updated>1754847407704</updated>
+     </task>
+-    <option name="localTasksCounter" value="17" />
++    <task id="LOCAL-00017" summary="added all Group functionality in CLI, Sender, and Handler">
++      <option name="closed" value="true" />
++      <created>1754878037636</created>
++      <option name="number" value="00017" />
++      <option name="presentableId" value="LOCAL-00017" />
++      <option name="project" value="LOCAL" />
++      <updated>1754878037636</updated>
++    </task>
++    <task id="LOCAL-00018" summary="Add questionary to interactively select peers for group create">
++      <option name="closed" value="true" />
++      <created>1754878210438</created>
++      <option name="number" value="00018" />
++      <option name="presentableId" value="LOCAL-00018" />
++      <option name="project" value="LOCAL" />
++      <updated>1754878210438</updated>
++    </task>
++    <option name="localTasksCounter" value="19" />
+     <servers />
+   </component>
+   <component name="TypeScriptGeneratedFilesManager">
+@@ -255,7 +270,9 @@
+     <MESSAGE value="Added the Ping/Profile broadcasts.&#10;&#10;Change CLI to have a verbose/non-verbose mode such that all verbose is saved in a global VERBOSE array to store all messages received during a session&#10;&#10;Refactored Tokenization" />
+     <MESSAGE value="renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features" />
+     <MESSAGE value="added cli verbose console route" />
+-    <option name="LAST_COMMIT_MESSAGE" value="added cli verbose console route" />
++    <MESSAGE value="added all Group functionality in CLI, Sender, and Handler" />
++    <MESSAGE value="Add questionary to interactively select peers for group create" />
++    <option name="LAST_COMMIT_MESSAGE" value="Add questionary to interactively select peers for group create" />
+   </component>
+   <component name="XDebuggerManager">
+     <breakpoint-manager>

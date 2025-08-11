@@ -2,7 +2,7 @@ import config
 from utils.message_builder import generate_message_id, format_message_dict
 from utils.token_utils import generate_token
 from storage.post_store import save_post
-from utils.printer import verbose_log
+from utils.printer import verbose_log, notif_log
 from utils.time_utils import current_unix_time
 
 def send_post(profile, content: str, udp):
@@ -19,7 +19,7 @@ def send_post(profile, content: str, udp):
     }
 
     verbose_log("POST", f"Post uploaded by {profile.user_id}: {content} - {current_unix_time()}")
-    print(f"\n\nPost uploaded by {profile.user_id}: {content}\n\n")
+    notif_log(f"Post uploaded by {profile.user_id}: {content}")
 
     post_dict = format_message_dict(post)
     udp.send_broadcast(post_dict)

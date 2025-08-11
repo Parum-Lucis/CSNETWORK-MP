@@ -78,6 +78,7 @@ project/
 	
 
 ## Running the Project
+To install dependencies, run pip install -r requirements.txt
 In terminal in the project directory, call python main.py
 
 Enter a username and set verbose mode on/off

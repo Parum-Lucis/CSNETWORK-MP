@@ -5,6 +5,7 @@ from handlers.file_handler import handle_file
 from handlers.profile_handler import handle_profile
 from handlers.post_handler import handle_post
 from handlers.direct_message_handler import handle_dm
+from handlers.game_handler import handle_invite
 from utils.network_utils import verify_sender_ip
 from utils.printer import verbose_log
 
@@ -85,6 +86,8 @@ class Dispatcher:
             handle_group_message(msg, addr)
         elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
             handle_file(msg, addr, self.listener, self.local_profile)
+        elif msg_type == "TICTACTOE_INVITE":
+            handle_invite(msg, addr, self.listener, self.local_profile)
         else:
             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
 

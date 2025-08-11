@@ -22,7 +22,7 @@ from storage.dm_store import get_thread
 from storage.peer_directory import get_peer
 from senders.post_broadcast import send_post
 from senders.direct_message_unicast import send_dm
-
+from senders.game_invite_unicast import invite_peer_to_game
 
 # ===============================
 # Queues shared with background handlers
@@ -320,6 +320,10 @@ def launch_main_menu(profile: Profile, udp):
                 elif choice == "DM Thread":
                     display_dm_thread(profile, selected.user_id, udp)
 
+                elif choice == "Invite to Game":
+                    invite_peer_to_game(profile, udp, selected.user_id)
+
+
         elif choice == "Settings: Change Post TTL":
             new_post_ttl = questionary.text(f"Enter new Post TTL in seconds (current {config.token_ttl_post}): ").ask()
 
@@ -400,6 +404,7 @@ def peer_menu():
                 "Follow",
                 "Unfollow",
                 "Send File",
+                "Invite to Game",
                 "↩ Return to menu"
             ]
         ).ask()

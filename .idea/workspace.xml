@@ -4,9 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features">
+    <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="unfucking the fuck part2.">
+      <change afterPath="$PROJECT_DIR$/senders/game_invite_unicast.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/dispatcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/dispatcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/game_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/game_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/cli.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,6 +43,9 @@
     &quot;accountId&quot;: &quot;34005450-7e8f-425f-984b-5b635c13e8d4&quot;
   }
 }</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
 }</component>
@@ -213,7 +219,23 @@
       <option name="project" value="LOCAL" />
       <updated>1754828805205</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="unfucking the fuck">
+      <option name="closed" value="true" />
+      <created>1754892255690</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1754892255690</updated>
+    </task>
+    <task id="LOCAL-00017" summary="unfucking the fuck part2.">
+      <option name="closed" value="true" />
+      <created>1754892551742</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1754892551742</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -246,7 +268,9 @@
     <MESSAGE value="Dynamically finds IP" />
     <MESSAGE value="Added the Ping/Profile broadcasts.&#10;&#10;Change CLI to have a verbose/non-verbose mode such that all verbose is saved in a global VERBOSE array to store all messages received during a session&#10;&#10;Refactored Tokenization" />
     <MESSAGE value="renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features" />
-    <option name="LAST_COMMIT_MESSAGE" value="renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features" />
+    <MESSAGE value="unfucking the fuck" />
+    <MESSAGE value="unfucking the fuck part2." />
+    <option name="LAST_COMMIT_MESSAGE" value="unfucking the fuck part2." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -254,6 +278,11 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/models/file_transfer.py</url>
           <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/ui/cli.py</url>
+          <line>332</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -8,7 +8,7 @@ from queue import Queue
 
 import config
 from models.peer import Profile
-from senders.group_unicast import build_group_update, build_group_create, build_group_message
+from senders.group_unicast import build_group_update, build_group_create, build_group_message, send_group_message
 from senders.revoke_sender import send_revoke
 from storage.group_directory import create_group, get_group_messages, group_table, get_group_members, get_group_name, update_group_members
 from utils.base64_utils import encode_image_to_base64
@@ -25,6 +25,8 @@ from storage.dm_store import get_thread
 from storage.peer_directory import get_peer
 from senders.post_broadcast import send_post
 from senders.direct_message_unicast import send_dm
+from storage.group_directory import get_group_messages
+from senders.group_unicast import send_group_message
 
 
 # ===============================
@@ -312,62 +314,61 @@ def update_group_cli(local_profile, udp_listener):
     print(f"✅ Group '{selected_group_name}' updated.")
 
 def send_group_message_cli(local_profile, udp_listener):
+    """
+    Prompts the user to select a group and send a message to its members.
+    """
     if not group_table:
         print("No groups to send messages to.")
         return
 
-    # Choose a group
+    # Choose a group, keeping the group_id as the actual value
     groups = [(gid, get_group_name(gid)) for gid in group_table.keys()]
     gid = questionary.select(
         "Select a group:",
-        choices=[f"{name} ({gid})" for gid, name in groups]
+        choices=[questionary.Choice(title=f"{name} ({gid})", value=gid) for gid, name in groups]
     ).ask()
+
+    if not gid:
+        print("❌ No group selected.")
+        return
 
     content = questionary.text("Enter your message:").ask()
 
-    msg = build_group_message(local_profile, gid, content)
+    # Import here to avoid circulars
 
-    # Send to each group member except self
-    for member in get_group_members(gid):
-        if member != local_profile.user_id:
-            member_ip = member.split("@")[1]
-            udp_listener.send_unicast(msg, member_ip)
-
-    print(f"📤 Message sent to group '{get_group_name(gid)}'.")
-
+    send = send_group_message(local_profile, gid, content, udp_listener)
+    if send:
+        print(f"📤 Message sent to group '{get_group_name(gid)}'.")
+    
 def view_group_messages_cli():
     """
-    Shows stored messages for a selected group.
+    Allows the user to view stored messages for a group.
     """
+
     if not group_table:
-        print("⚠ No groups found.")
+        print("No groups available.")
         return
 
-    # Choose a group
     groups = [(gid, get_group_name(gid)) for gid in group_table.keys()]
-    group_choice = questionary.select(
+    gid = questionary.select(
         "Select a group:",
-        choices=[f"{name} ({gid})" for gid, name in groups]
+        choices=[questionary.Choice(title=f"{name} ({gid})", value=gid) for gid, name in groups]
     ).ask()
-    if not group_choice:
+
+    if not gid:
+        print("❌ No group selected.")
         return
 
-    # Map selection to group_id
-    selected_group_id = next(gid for gid, name in groups if f"{name} ({gid})" == group_choice)
-
-    # Retrieve messages
-    messages = get_group_messages(selected_group_id)
-
+    messages = get_group_messages(gid)
     if not messages:
         print("📭 No messages in this group yet.")
-        wait_for_enter()
-        return
+    else:
+        print(f"=== Messages in '{get_group_name(gid)}' ===")
+        for m in messages:
+            print(f"[{m['TIMESTAMP']}] {m['FROM']}: {m['CONTENT']}")
 
-    print(f"\n💬 Messages in '{get_group_name(selected_group_id)}':\n")
-    for msg in messages:
-        print(f"[{msg['timestamp']}] {msg['sender']}: {msg['content']}")
+    input("\n🔙 Press Enter to return to the main menu...")
 
-    wait_for_enter()
 
 def launch_main_menu(profile: Profile, udp):
     while True:

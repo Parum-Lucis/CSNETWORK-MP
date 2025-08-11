@@ -72,13 +72,13 @@ def file_form():
     answers = {}
     try:
         while True:
-            file_loc = questionary.text("Enter the file location").ask()
+            file_loc = questionary.text("Enter the file location:").ask()
 
             if file_loc:    
                 if os.path.isfile(file_loc):
                     answers["file_location"] = file_loc
-                    answers["file_name"] = questionary.text("Enter the file name to use (empty to use the default)").ask()
-                    answers["description"] = questionary.text("Enter the file description: ").ask()
+                    answers["file_name"] = questionary.text("Enter the file name to use (empty to use the default):").ask()
+                    answers["description"] = questionary.text("Enter the file description:").ask()
                 else:
                     questionary.print("❌ The file entered does not exist.", style="bold fg:red")
                     continue
@@ -106,7 +106,7 @@ def process_file_offer(msg, addr, udp, local_profile):
           f"Do you accept? {file_name} ({file_size} bytes)")
 
     clear_screen()
-    questionary.print(f"\n📥 User {from_user} is sending you a file do you accept? {file_name} ({file_size} bytes)")
+    questionary.print(f"\n📥 User {from_user_id} is sending you a file do you accept? {file_name} ({file_size} bytes)")
     accept = questionary.confirm("Accept file?").ask()
     if accept:
         from models.file_transfer import FileTransferResponder
@@ -127,7 +127,6 @@ def process_file_offer(msg, addr, udp, local_profile):
 
     # Flush any logs that may have appeared during this process
     flush_pending_logs()
-
 
 def find_peer_by_user_id(user_id: str):
     peers = get_peers(active_within=300)

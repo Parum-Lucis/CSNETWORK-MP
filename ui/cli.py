@@ -361,7 +361,7 @@ def select_peer(local_profile):
             questionary.print("📡 Live Peer View (auto-refreshes every 3s)", style="bold")
             peers = get_peers(active_within=300)
             peers = [p for p in peers if local_profile.user_id != p.user_id]
-            print(peers)
+            
             if not peers:
                 if not waiting:
                     waiting = True

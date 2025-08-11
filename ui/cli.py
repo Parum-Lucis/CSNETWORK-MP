@@ -69,13 +69,14 @@ def file_form():
         while True:
             file_loc = questionary.text("Enter the file location").ask()
 
-            if os.path.isfile(file_loc):
-                answers["file_location"] = file_loc
-                answers["file_name"] = questionary.text("Enter the file name to use (empty to use the default)").ask()
-                answers["description"] = questionary.text("Enter the file description: ").ask()
-            else:
-                questionary.print("❌ The file entered does not exist.", style="bold fg:red")
-                continue
+            if file_loc:    
+                if os.path.isfile(file_loc):
+                    answers["file_location"] = file_loc
+                    answers["file_name"] = questionary.text("Enter the file name to use (empty to use the default)").ask()
+                    answers["description"] = questionary.text("Enter the file description: ").ask()
+                else:
+                    questionary.print("❌ The file entered does not exist.", style="bold fg:red")
+                    continue
             return answers
     except KeyboardInterrupt:
         return None
@@ -253,6 +254,9 @@ def send_group_message_cli(local_profile, udp_listener):
 
 def launch_main_menu(profile: Profile, udp):
     while True:
+
+        questionary.print(f"User: {profile.user_id}", style="bold fg:yellow")
+
         # ✅ Flush background logs
         flush_pending_logs()
 

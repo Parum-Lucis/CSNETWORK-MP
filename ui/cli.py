@@ -23,6 +23,7 @@ from storage.peer_directory import get_peer
 from senders.post_broadcast import send_post
 from senders.direct_message_unicast import send_dm
 from senders.game_invite_unicast import invite_peer_to_game
+from handlers.game_handler import pending_game_invites, process_game_invite
 
 # ===============================
 # Queues shared with background handlers
@@ -254,6 +255,11 @@ def launch_main_menu(profile: Profile, udp):
     while True:
         # ✅ Flush background logs
         flush_pending_logs()
+
+        # Confirm incoming invitez
+        while not pending_game_invites.empty():
+            msg, addr, listener = pending_game_invites.get()
+            process_game_invite(msg, addr, listener)
 
         # ✅ Process pending file offers before showing menu
         while not pending_file_offers.empty():

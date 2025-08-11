@@ -365,7 +365,7 @@ def view_group_messages_cli():
     else:
         print(f"=== Messages in '{get_group_name(gid)}' ===")
         for m in messages:
-            print(f"[{m['TIMESTAMP']}] {m['FROM']}: {m['CONTENT']}")
+            print(f"[{m['timestamp']}] {m['sender']}: {m['content']}")
 
     input("\n🔙 Press Enter to return to the main menu...")
 

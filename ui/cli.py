@@ -10,7 +10,7 @@ import config
 from models.peer import Profile
 from senders.group_unicast import build_group_update, build_group_create, build_group_message
 from senders.revoke_sender import send_revoke
-from storage.group_directory import create_group, group_table, get_group_members, get_group_name, update_group_members
+from storage.group_directory import create_group, get_group_messages, group_table, get_group_members, get_group_name, update_group_members
 from utils.base64_utils import encode_image_to_base64
 from utils.network_utils import get_local_ip
 from storage.peer_directory import get_peers
@@ -178,7 +178,8 @@ def group_menu(local_profile, udp_listener):
                 "Update Group",
                 "View My Groups",
                 "Send Message to Group",
-                "Back to Main Menu"
+                "View Messages in Group",
+                "↩ Return to menu"
             ]
         ).ask()
 
@@ -194,7 +195,10 @@ def group_menu(local_profile, udp_listener):
         elif choice == "Send Message to Group":
             send_group_message_cli(local_profile, udp_listener)
 
-        elif choice == "Back to Main Menu":
+        elif choice == "View Messages in Group":
+            view_group_messages_cli()
+
+        elif choice == "↩ Return to menu":
             break
 
 def create_group_cli(local_profile, udp_listener):
@@ -330,6 +334,40 @@ def send_group_message_cli(local_profile, udp_listener):
             udp_listener.send_unicast(msg, member_ip)
 
     print(f"📤 Message sent to group '{get_group_name(gid)}'.")
+
+def view_group_messages_cli():
+    """
+    Shows stored messages for a selected group.
+    """
+    if not group_table:
+        print("⚠ No groups found.")
+        return
+
+    # Choose a group
+    groups = [(gid, get_group_name(gid)) for gid in group_table.keys()]
+    group_choice = questionary.select(
+        "Select a group:",
+        choices=[f"{name} ({gid})" for gid, name in groups]
+    ).ask()
+    if not group_choice:
+        return
+
+    # Map selection to group_id
+    selected_group_id = next(gid for gid, name in groups if f"{name} ({gid})" == group_choice)
+
+    # Retrieve messages
+    messages = get_group_messages(selected_group_id)
+
+    if not messages:
+        print("📭 No messages in this group yet.")
+        wait_for_enter()
+        return
+
+    print(f"\n💬 Messages in '{get_group_name(selected_group_id)}':\n")
+    for msg in messages:
+        print(f"[{msg['timestamp']}] {msg['sender']}: {msg['content']}")
+
+    wait_for_enter()
 
 def launch_main_menu(profile: Profile, udp):
     while True:

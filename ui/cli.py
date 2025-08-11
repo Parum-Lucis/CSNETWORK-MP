@@ -14,6 +14,11 @@ from utils.time_utils import wait_for_enter
 from models.file_transfer import FileTransfer
 from models.file_transfer import FileTransferResponder
 from storage.post_store import get_recent_posts
+from storage.dm_store import get_thread
+from storage.peer_directory import get_peer
+from senders.post_broadcast import send_post
+from senders.direct_message_unicast import send_dm
+
 
 # ===============================
 # Queues shared with background handlers
@@ -101,6 +106,46 @@ def process_file_offer(msg, addr, udp):
     # Flush any logs that may have appeared during this process
     flush_pending_logs()
 
+def find_peer_by_user_id(user_id: str):
+    peers = get_peers(active_within=300)
+    for p in peers:
+        if getattr(p, "user_id", None) == user_id:
+            return p
+    return None
+
+def display_dm_thread(profile, peer_id: str, udp):
+    thread = get_thread(peer_id, profile.user_id, limit=50)
+    if not thread:
+        questionary.print("No messages in this thread yet.", style="fg:yellow")
+        wait_for_enter()
+        clear_screen()
+        return
+    
+    questionary.print(f"💬 Conversation with {peer_id}\n", style="bold")
+    for msg in thread:
+        timestamp = msg.get("TIMESTAMP")
+        who = "You" if msg.get("FROM") == profile.user_id else peer_id
+        questionary.print(f"[{timestamp}] {who}: {msg.get("CONTENT")}")
+
+    action = questionary.select(
+            "Choose an action:",
+            choices=["Reply", "↩ Back"]
+    ).ask()
+
+    if action == "Reply":
+        peer = find_peer_by_user_id(peer_id)
+        if not peer:
+            questionary.print("⚠️ Peer is not currently online; cannot send.", style="fg:yellow")
+            wait_for_enter()
+            return
+        reply = questionary.text("Type your reply:").ask()
+        if reply and reply.strip():
+            send_dm(profile, peer, reply, udp)
+            questionary.print("📤 Sent.", style="fg:green")
+            wait_for_enter()
+
+    clear_screen()
+
 def launch_main_menu(profile: Profile, udp):
     while True:
         # ✅ Flush background logs
@@ -164,6 +209,13 @@ def launch_main_menu(profile: Profile, udp):
                     )
                     file_transfer.file_offer()
 
+                elif choice == "DM":
+                    content = questionary.text("Enter your message:").ask()
+                    send_dm(profile, selected, content, udp)
+
+                elif choice == "DM Thread":
+                    display_dm_thread(profile, selected.user_id, udp)
+
         elif choice == "Settings: Change Post TTL":
             new_post_ttl = questionary.text(f"Enter new Post TTL in seconds (current {config.token_ttl_post}): ").ask()
 
@@ -175,7 +227,6 @@ def launch_main_menu(profile: Profile, udp):
 
         elif choice == "Post":
             content = questionary.text("Enter your post content:").ask()
-            from senders.post_broadcast import send_post
             send_post(profile, content, udp)
 
         elif choice == "Check Feed":
@@ -232,6 +283,7 @@ def peer_menu():
             "Select an operation to run:",
             choices=[
                 "DM",
+                "DM Thread",
                 "Follow",
                 "Unfollow",
                 "Send File",

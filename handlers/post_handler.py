@@ -41,6 +41,7 @@ def handle_post(msg, addr):
     if status:
         verbose_log("POST", f"Received post uploaded by {poster_id}: {content} - {current_unix_time()}")
         print(f"\n\nPost received from {poster_id}: {content}\n\n")
+        return
     else:
         verbose_log("DROP!", f"Duplicated/seen post uploaded by {poster_id} (ignored): {content} - {current_unix_time()}")
         print(f"\n\nPost duplicated/seen from {poster_id}: {content}\n\n")

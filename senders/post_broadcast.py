@@ -1,5 +1,5 @@
 import config
-from utils.message_builder import generate_message_id
+from utils.message_builder import generate_message_id, format_message_dict
 from utils.token_utils import generate_token
 from storage.post_store import save_post
 from utils.printer import verbose_log
@@ -21,5 +21,5 @@ def send_post(profile, content: str, udp):
     verbose_log("POST", f"Post uploaded by {profile.user_id}: {content} - {current_unix_time()}")
     print(f"\n\nPost uploaded by {profile.user_id}: {content}\n\n")
 
-    post_lines = [f"{k}: {v}" for k, v in post.items()]
-    udp.send_broadcast("\n".join(post_lines) + "\n\n")
+    post_dict = format_message_dict(post)
+    udp.send_broadcast(post_dict)

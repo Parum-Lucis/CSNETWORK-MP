@@ -5,6 +5,11 @@ from handlers.file_handler import handle_file
 from handlers.profile_handler import handle_profile
 from handlers.post_handler import handle_post
 from handlers.direct_message_handler import handle_dm
+from handlers.game_handler import (
+    handle_tictactoe_invite,
+    handle_tictactoe_move,
+    handle_tictactoe_result,
+)
 from utils.printer import verbose_log
 
 def parse_message(message: str) -> dict:
@@ -80,6 +85,13 @@ class Dispatcher:
             handle_group_message(msg, addr)
         elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
             handle_file(msg, addr, self.listener, self.local_profile)
+        elif msg_type == "TICTACTOE_INVITE":
+            handle_tictactoe_invite(msg, addr, self.listener, self.local_profile)
+        elif msg_type == "TICTACTOE_MOVE":
+            handle_tictactoe_move(msg, addr, self.listener, self.local_profile)
+        elif msg_type == "TICTACTOE_RESULT":
+            handle_tictactoe_result(msg, addr, self.listener, self.local_profile)
+
         else:
             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
 

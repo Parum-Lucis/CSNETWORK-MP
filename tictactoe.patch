@@ -1,0 +1,585 @@
+diff --git a/core/dispatcher.py b/core/dispatcher.py
+index 0000000..0000000
+--- a/core/dispatcher.py
++++ b/core/dispatcher.py
+@@ -1,200 +1,240 @@
+-from handlers.ack_handler import handle_ack
+-from handlers.group_handler import handle_group_message, handle_group_create
+-from handlers.ping_handler import handle_ping
+-from handlers.file_handler import handle_file
+-from handlers.profile_handler import handle_profile
+-from handlers.post_handler import handle_post
+-from handlers.direct_message_handler import handle_dm
+-from utils.printer import verbose_log
++from handlers.ack_handler import handle_ack
++from handlers.group_handler import handle_group_message, handle_group_create
++from handlers.ping_handler import handle_ping
++from handlers.file_handler import handle_file
++from handlers.profile_handler import handle_profile
++from handlers.post_handler import handle_post
++from handlers.direct_message_handler import handle_dm
++from handlers.game_handler import (
++    handle_tictactoe_invite,
++    handle_tictactoe_move,
++    handle_tictactoe_result,
++)
++from utils.printer import verbose_log
+@@
+-        elif msg_type == "GROUP_MESSAGE":
+-            handle_group_message(msg, addr)
+-        # elif msg_type == "GROUP_JOIN":
+-        #     handle_group_join(msg, addr)
+-        # elif msg_type == "GROUP_LEAVE":
+-        #     handle_group_leave(msg, addr)
+-        elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
+-            handle_file(msg, addr, self.listener, self.local_profile)
++        elif msg_type == "GROUP_MESSAGE":
++            handle_group_message(msg, addr)
++        # elif msg_type == "GROUP_JOIN":
++        #     handle_group_join(msg, addr)
++        # elif msg_type == "GROUP_LEAVE":
++        #     handle_group_leave(msg, addr)
++        elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
++            handle_file(msg, addr, self.listener, self.local_profile)
++        elif msg_type == "TICTACTOE_INVITE":
++            handle_tictactoe_invite(msg, addr, self.listener, self.local_profile)
++        elif msg_type == "TICTACTOE_MOVE":
++            handle_tictactoe_move(msg, addr, self.listener, self.local_profile)
++        elif msg_type == "TICTACTOE_RESULT":
++            handle_tictactoe_result(msg, addr, self.listener, self.local_profile)
+         else:
+             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
+diff --git a/models/game_session.py b/models/game_session.py
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/models/game_session.py
+@@ -0,0 +1,191 @@
++"""TicTacToe game session model (RFC 5.12 - 5.14).
++
++This model stores in-memory state for a single game session, provides move
++validation, idempotency, and win/draw detection logic.
++"""
++from dataclasses import dataclass, field
++from typing import List, Optional, Dict
++import time
++
++
++@dataclass
++class GameSession:
++    """Represents an in-memory TicTacToe session."""
++    game_id: str
++    player_x: str               # e.g., alice@192.168.1.11
++    player_o: str               # e.g., bob@192.168.1.12
++    player_x_ip: str
++    player_o_ip: str
++    # map user_id -> symbol ('X' or 'O')
++    symbol_of: Dict[str, str] = field(default_factory=dict)
++    board: List[Optional[str]] = field(default_factory=lambda: [None] * 9)
++    turn: int = 0               # last applied turn number (0 before 1st)
++    status: str = "PENDING"     # PENDING, IN_PROGRESS, COMPLETE, FORFEIT
++    winner: Optional[str] = None
++    winning_line: Optional[List[int]] = None
++    last_update: float = field(default_factory=time.time)
++    processed_turns: set = field(default_factory=set)  # processed turns for idempotency
++
++    def assign_symbols(self, inviter_user_id: str, inviter_symbol: str):
++        inviter_symbol = (inviter_symbol or "X").upper()
++        if inviter_symbol not in ("X", "O"):
++            inviter_symbol = "X"
++        other_symbol = "O" if inviter_symbol == "X" else "X"
++        self.symbol_of[inviter_user_id] = inviter_symbol
++        other_user = self.player_o if inviter_user_id == self.player_x else self.player_x
++        self.symbol_of[other_user] = other_symbol
++
++    def apply_move(self, user_id: str, position: int, symbol: str, turn_number: int) -> bool:
++        """Try to apply a move.
++
++        Returns True if move applied (new), False otherwise (invalid or duplicate).
++        Idempotency: if this turn_number was processed, return False (but caller should ACK).
++        """
++        # idempotency
++        if turn_number in self.processed_turns:
++            return False
++
++        # basic checks
++        if not (0 <= position <= 8):
++            return False
++        if self.board[position] is not None:
++            return False
++        expected_symbol = self.symbol_of.get(user_id)
++        if expected_symbol != (symbol or "").upper():
++            return False
++        if turn_number != self.turn + 1:
++            return False
++
++        # apply
++        self.board[position] = symbol.upper()
++        self.turn = turn_number
++        self.processed_turns.add(turn_number)
++        self.last_update = time.time()
++        if self.status == "PENDING":
++            self.status = "IN_PROGRESS"
++        return True
++
++    def check_winner(self) -> Optional[dict]:
++        """Return outcome dict if WIN or DRAW, else None."""
++        lines = [
++            (0, 1, 2), (3, 4, 5), (6, 7, 8),
++            (0, 3, 6), (1, 4, 7), (2, 5, 8),
++            (0, 4, 8), (2, 4, 6)
++        ]
++        for a, b, c in lines:
++            if self.board[a] and self.board[a] == self.board[b] == self.board[c]:
++                sym = self.board[a]
++                # find user_id for symbol
++                winner_user = None
++                for uid, s in self.symbol_of.items():
++                    if s == sym:
++                        winner_user = uid
++                        break
++                return {"result": "WIN", "symbol": sym, "line": [a, b, c], "winner": winner_user}
++        # draw
++        if all(cell is not None for cell in self.board):
++            return {"result": "DRAW"}
++        return None
++
++    def other_player(self, user_id: str) -> Optional[str]:
++        if user_id == self.player_x:
++            return self.player_o
++        if user_id == self.player_o:
++            return self.player_x
++        return None
++
++    def to_dict(self) -> dict:
++        return {
++            "game_id": self.game_id,
++            "player_x": self.player_x,
++            "player_o": self.player_o,
++            "board": self.board,
++            "turn": self.turn,
++            "status": self.status,
++            "winner": self.winner,
++            "winning_line": self.winning_line
++        }
+diff --git a/storage/game_sessions.py b/storage/game_sessions.py
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/storage/game_sessions.py
+@@ -0,0 +1,80 @@
++"""In-memory store for TicTacToe GameSession objects."""
++
++import threading
++import time
++from typing import Dict, Optional
++from models.game_session import GameSession
++
++_game_table: Dict[str, tuple[GameSession, float]] = {}
++_lock = threading.Lock()
++
++def create_session(game: GameSession) -> bool:
++    """Add a session. Return False if already exists."""
++    with _lock:
++        if game.game_id in _game_table:
++            return False
++        _game_table[game.game_id] = (game, time.time())
++        return True
++
++def get_session(game_id: str) -> Optional[GameSession]:
++    with _lock:
++        entry = _game_table.get(game_id)
++        return entry[0] if entry else None
++
++def update_session_last_seen(game_id: str):
++    with _lock:
++        if game_id in _game_table:
++            game, _ = _game_table[game_id]
++            _game_table[game_id] = (game, time.time())
++
++def remove_session(game_id: str):
++    with _lock:
++        if game_id in _game_table:
++            del _game_table[game_id]
++
++def list_sessions(active_within: int = 3600):
++    now = time.time()
++    with _lock:
++        return [g for g, ts in _game_table.values() if now - ts <= active_within]
++
++def session_exists(game_id: str) -> bool:
++    with _lock:
++        return game_id in _game_table
+diff --git a/senders/game_responder.py b/senders/game_responder.py
+new file mode 100644
+index 0000000..3333333
+--- /dev/null
++++ b/senders/game_responder.py
+@@ -0,0 +1,180 @@
++"""TicTacToe responder / sender helpers.
++
++Creates RFC-compliant messages exactly as specified (no extra fields except optional WINNING_LINE).
++"""
++import time
++import uuid
++from utils.printer import verbose_log
++from utils.token_utils import generate_token
++
++
++class GameResponder:
++    def __init__(self, listener, local_user_id: str, local_ip: str):
++        self.listener = listener
++        self.local_user_id = local_user_id
++        self.local_ip = local_ip
++
++    @staticmethod
++    def _finalize(kv_pairs):
++        return "\n".join(f"{k}: {v}" for k, v in kv_pairs) + "\n\n"
++
++    def send_invite(self, to_ip: str, to_user: str, game_id: str, symbol: str, message_id: str = None, token_ttl: int = 600):
++        mid = message_id or uuid.uuid4().hex[:8]
++        ts = str(int(time.time()))
++        token = generate_token(self.local_user_id, token_ttl, "game")
++        kv = [
++            ("TYPE", "TICTACTOE_INVITE"),
++            ("FROM", self.local_user_id),
++            ("TO", to_user),
++            ("GAMEID", game_id),
++            ("MESSAGE_ID", mid),
++            ("SYMBOL", symbol),
++            ("TIMESTAMP", ts),
++            ("TOKEN", token),
++        ]
++        msg = self._finalize(kv)
++        self.listener.send_unicast(msg, to_ip)
++        verbose_log("SEND >", msg)
++        return mid
++
++    def send_move(self, to_ip: str, to_user: str, game_id: str, position: int, symbol: str, turn: int, message_id: str = None, token_ttl: int = 600):
++        mid = message_id or uuid.uuid4().hex[:8]
++        token = generate_token(self.local_user_id, token_ttl, "game")
++        kv = [
++            ("TYPE", "TICTACTOE_MOVE"),
++            ("FROM", self.local_user_id),
++            ("TO", to_user),
++            ("GAMEID", game_id),
++            ("MESSAGE_ID", mid),
++            ("POSITION", str(position)),
++            ("SYMBOL", symbol),
++            ("TURN", str(turn)),
++            ("TOKEN", token),
++        ]
++        msg = self._finalize(kv)
++        self.listener.send_unicast(msg, to_ip)
++        verbose_log("SEND >", msg)
++        return mid
++
++    def send_result(self, to_ip: str, to_user: str, game_id: str, result: str, symbol: str, winning_line: list | None = None, message_id: str = None, token_ttl: int = 600):
++        mid = message_id or uuid.uuid4().hex[:8]
++        ts = str(int(time.time()))
++        kv = [
++            ("TYPE", "TICTACTOE_RESULT"),
++            ("FROM", self.local_user_id),
++            ("TO", to_user),
++            ("GAMEID", game_id),
++            ("MESSAGE_ID", mid),
++            ("RESULT", result),
++            ("SYMBOL", symbol),
++        ]
++        if winning_line:
++            kv.append(("WINNING_LINE", ",".join(str(i) for i in winning_line)))
++        kv.append(("TIMESTAMP", ts))
++        msg = self._finalize(kv)
++        self.listener.send_unicast(msg, to_ip)
++        verbose_log("SEND >", msg)
++        return mid
+diff --git a/handlers/game_handler.py b/handlers/game_handler.py
+new file mode 100644
+index 0000000..4444444
+--- /dev/null
++++ b/handlers/game_handler.py
+@@ -0,0 +1,340 @@
++"""Handlers for TicTacToe messages (RFC 5.12-5.14).
++
++All handlers validate:
++ - `TO` matches local_profile.user_id
++ - IP in FROM field matches UDP source (RFC guidance)
++ - Token is valid via `core.token_validator.validate_token(token, scope='game')`
++"""
++from storage.game_sessions import create_session, get_session, update_session_last_seen, remove_session, session_exists
++from models.game_session import GameSession
++from utils.printer import verbose_log
++from senders.game_responder import GameResponder
++from core.token_validator import validate_token
++import queue
++
++# UI queues (non-blocking notifications) — mirror existing project pattern
++try:
++    from ui.cli import pending_game_invites, pending_game_logs
++except Exception:
++    pending_game_invites = queue.Queue()
++    pending_game_logs = queue.Queue()
++
++
++def _verify_from_ip(msg_from_field: str, addr_ip: str) -> bool:
++    if "@" in msg_from_field:
++        _, ip = msg_from_field.rsplit("@", 1)
++        return ip == addr_ip
++    return True
++
++
++def _generate_local_ip_from_profile(user_id: str) -> str:
++    # user_id format is username@ip — extract ip part for unicast when needed
++    if "@" in user_id:
++        return user_id.rsplit("@", 1)[1]
++    return "127.0.0.1"
++
++
++def handle_tictactoe_invite(msg: dict, addr: tuple, listener, local_profile):
++    # Basic routing guard
++    if msg.get("TO") != local_profile.user_id:
++        return
++
++    # IP check
++    if not _verify_from_ip(msg.get("FROM", ""), addr[0]):
++        verbose_log("WARN", f"TICTACTOE_INVITE FROM IP mismatch: {msg.get('FROM')} vs {addr[0]}")
++        return
++
++    # Token validation (scope=game)
++    token = msg.get("TOKEN")
++    if not validate_token(token, scope="game"):
++        verbose_log("WARN", f"Invalid/expired token for TICTACTOE_INVITE from {msg.get('FROM')}")
++        return
++
++    gameid = msg.get("GAMEID")
++    inviter = msg.get("FROM")
++    symbol = (msg.get("SYMBOL") or "X").upper()
++
++    # Determine players and IPs
++    if symbol == "X":
++        p_x = inviter
++        p_o = local_profile.user_id
++        px_ip = addr[0]
++        po_ip = local_profile.ip
++    else:
++        p_x = local_profile.user_id
++        p_o = inviter
++        px_ip = local_profile.ip
++        po_ip = addr[0]
++
++    session = GameSession(game_id=gameid, player_x=p_x, player_o=p_o, player_x_ip=px_ip, player_o_ip=po_ip)
++    session.assign_symbols(inviter, symbol)
++    created = create_session(session)
++    if not created:
++        update_session_last_seen(gameid)
++
++    # UI: one-line non-verbose invite text
++    pending_game_invites.put((msg, addr))
++    verbose_log("INFO", f"Received TicTacToe invite {gameid} from {inviter}")
++
++    # Send ACK back to inviter to confirm receipt (plain ACK like other handlers)
++    responder = GameResponder(listener, local_profile.user_id, local_profile.ip)
++    ack_msg = "TYPE: ACK\\nMESSAGE_ID: {}\\nSTATUS: RECEIVED\\n\\n".format(msg.get("MESSAGE_ID"))
++    responder.listener.send_unicast(ack_msg, addr[0])
++
++
++def handle_tictactoe_move(msg: dict, addr: tuple, listener, local_profile):
++    if msg.get("TO") != local_profile.user_id:
++        return
++
++    if not _verify_from_ip(msg.get("FROM", ""), addr[0]):
++        verbose_log("WARN", f"TICTACTOE_MOVE FROM IP mismatch: {msg.get('FROM')} vs {addr[0]}")
++        return
++
++    token = msg.get("TOKEN")
++    if not validate_token(token, scope="game"):
++        verbose_log("WARN", f"Invalid/expired token for TICTACTOE_MOVE from {msg.get('FROM')}")
++        return
++
++    gameid = msg.get("GAMEID")
++    session = get_session(gameid)
++    if not session:
++        pending_game_logs.put(f"⚠️ Received move for unknown game {gameid}")
++        return
++
++    try:
++        position = int(msg.get("POSITION"))
++        turn_num = int(msg.get("TURN"))
++        symbol = (msg.get("SYMBOL") or "").upper()
++    except Exception:
++        pending_game_logs.put("⚠️ Invalid TicTacToe move message fields")
++        return
++
++    # Duplicate detection
++    if turn_num in session.processed_turns:
++        # send ACK duplicate status
++        responder = GameResponder(listener, local_profile.user_id, local_profile.ip)
++        ack_msg = "TYPE: ACK\\nMESSAGE_ID: {}\\nSTATUS: DUPLICATE\\n\\n".format(msg.get("MESSAGE_ID"))
++        responder.listener.send_unicast(ack_msg, addr[0])
++        return
++
++    # Turn expected
++    if turn_num != session.turn + 1:
++        pending_game_logs.put(f"⚠️ Unexpected TURN {turn_num} for game {gameid} (expected {session.turn + 1})")
++        responder = GameResponder(listener, local_profile.user_id, local_profile.ip)
++        ack_msg = "TYPE: ACK\\nMESSAGE_ID: {}\\nSTATUS: INVALID_TURN\\n\\n".format(msg.get("MESSAGE_ID"))
++        responder.listener.send_unicast(ack_msg, addr[0])
++        return
++
++    applied = session.apply_move(user_id=msg.get("FROM"), position=position, symbol=symbol, turn_number=turn_num)
++    if not applied:
++        pending_game_logs.put(f"⚠️ Invalid move by {msg.get('FROM')} in game {gameid} at pos {position}")
++        responder = GameResponder(listener, local_profile.user_id, local_profile.ip)
++        ack_msg = "TYPE: ACK\\nMESSAGE_ID: {}\\nSTATUS: INVALID_MOVE\\n\\n".format(msg.get("MESSAGE_ID"))
++        responder.listener.send_unicast(ack_msg, addr[0])
++        return
++
++    # ACK the move
++    responder = GameResponder(listener, local_profile.user_id, local_profile.ip)
++    ack_msg = "TYPE: ACK\\nMESSAGE_ID: {}\\nSTATUS: RECEIVED\\n\\n".format(msg.get("MESSAGE_ID"))
++    responder.listener.send_unicast(ack_msg, addr[0])
++
++    # Check for win/draw
++    outcome = session.check_winner()
++    if outcome:
++        if outcome.get("result") == "WIN":
++            session.status = "COMPLETE"
++            session.winner = outcome.get("winner")
++            session.winning_line = outcome.get("line")
++            opponent = session.other_player(msg.get("FROM"))
++            opponent_ip = _generate_local_ip_from_profile(opponent)
++            # RESULT: WIN (sender = the player who made the winning move)
++            responder.send_result(
++                to_ip=opponent_ip,
++                to_user=opponent,
++                game_id=session.game_id,
++                result="WIN",
++                symbol=outcome.get("symbol"),
++                winning_line=outcome.get("line")
++            )
++        elif outcome.get("result") == "DRAW":
++            session.status = "COMPLETE"
++            opponent = session.other_player(msg.get("FROM"))
++            opponent_ip = _generate_local_ip_from_profile(opponent)
++            responder.send_result(
++                to_ip=opponent_ip,
++                to_user=opponent,
++                game_id=session.game_id,
++                result="DRAW",
++                symbol=symbol,
++                winning_line=None
++            )
++
++    update_session_last_seen(gameid)
++    pending_game_logs.put(f"Move applied for game {gameid} at position {position} (turn {turn_num})")
++
++
++def handle_tictactoe_result(msg: dict, addr: tuple, listener, local_profile):
++    if msg.get("TO") != local_profile.user_id:
++        return
++
++    if not _verify_from_ip(msg.get("FROM", ""), addr[0]):
++        verbose_log("WARN", f"TICTACTOE_RESULT FROM IP mismatch: {msg.get('FROM')} vs {addr[0]}")
++        return
++
++    token = msg.get("TOKEN")
++    if not validate_token(token, scope="game"):
++        verbose_log("WARN", f"Invalid/expired token for TICTACTOE_RESULT from {msg.get('FROM')}")
++        return
++
++    gameid = msg.get("GAMEID")
++    session = get_session(gameid)
++    if not session:
++        pending_game_logs.put(f"⚠️ Received result for unknown game {gameid}")
++        return
++
++    result = msg.get("RESULT")
++    symbol = msg.get("SYMBOL")
++    winning_line_raw = msg.get("WINNING_LINE")
++    winning_line = [int(i) for i in winning_line_raw.split(",")] if winning_line_raw else None
++
++    session.status = "COMPLETE"
++    if result == "WIN" and winning_line:
++        session.winning_line = winning_line
++        # find winner user id
++        winner_user = None
++        for uid, sym in session.symbol_of.items():
++            if sym == symbol:
++                winner_user = uid
++                break
++        session.winner = winner_user
++    else:
++        session.winner = None
++
++    pending_game_logs.put(f"Game {gameid} finished with result: {result}")
++    remove_session(gameid)
+diff --git a/ui/display.py b/ui/display.py
+index 0000000..5555555
+--- a/ui/display.py
++++ b/ui/display.py
+@@ -1,200 +1,240 @@
+ # existing display utilities...
+ 
+ def verbose_log(*args, **kwargs):
+     # existing helper -- leave as is
+     pass
++
++def print_board_colored(board: list):
++    """Render a 3x3 board with minimal ANSI coloring to match existing display style."""
++    def cell(v):
++        return v if v is not None else " "
++
++    def colorize(val):
++        if val == "X":
++            return f"\x1b[31m{val}\x1b[0m"  # red for X
++        if val == "O":
++            return f"\x1b[36m{val}\x1b[0m"  # cyan for O
++        return val
++
++    rows = [
++        f" {colorize(cell(board[0]))} | {colorize(cell(board[1]))} | {colorize(cell(board[2]))} ",
++        f" {colorize(cell(board[3]))} | {colorize(cell(board[4]))} | {colorize(cell(board[5]))} ",
++        f" {colorize(cell(board[6]))} | {colorize(cell(board[7]))} | {colorize(cell(board[8]))} ",
++    ]
++    sep = "\n-----------\n"
++    print(rows[0] + sep + rows[1] + sep + rows[2])
+diff --git a/ui/cli.py b/ui/cli.py
+index 0000000..6666666
+--- a/ui/cli.py
++++ b/ui/cli.py
+@@ -1,200 +1,260 @@
+ import queue
+ 
+ # existing queues...
+ # pending_file_offers = queue.Queue()
+ # pending_logs = queue.Queue()
+ 
+ # New for TicTacToe
+ pending_game_invites = queue.Queue()
+ pending_game_logs = queue.Queue()
++
++# Minimal CLI helper functions for TicTacToe (non-blocking; integrate into menu as desired)
++def ttt_invite_command(listener, local_profile, to_user: str, to_ip: str, symbol: str = "X"):
++    """Send a TICTACTOE_INVITE to a peer."""
++    from senders.game_responder import GameResponder
++    import random
++    game_id = f"g{random.randint(0,255)}"
++    responder = GameResponder(listener, local_profile.user_id, local_profile.ip)
++    mid = responder.send_invite(to_ip=to_ip, to_user=to_user, game_id=game_id, symbol=symbol)
++    return game_id, mid
++
++def ttt_move_command(listener, local_profile, to_user: str, to_ip: str, game_id: str, position: int, symbol: str, turn: int):
++    """Send a TICTACTOE_MOVE to a peer."""
++    from senders.game_responder import GameResponder
++    responder = GameResponder(listener, local_profile.user_id, local_profile.ip)
++    mid = responder.send_move(to_ip=to_ip, to_user=to_user, game_id=game_id, position=position, symbol=symbol, turn=turn)
++    return mid
++
++def ttt_result_command(listener, local_profile, to_user: str, to_ip: str, game_id: str, result: str, symbol: str, winning_line=None):
++    """Send a TICTACTOE_RESULT to a peer."""
++    from senders.game_responder import GameResponder
++    responder = GameResponder(listener, local_profile.user_id, local_profile.ip)
++    mid = responder.send_result(to_ip=to_ip, to_user=to_user, game_id=game_id, result=result, symbol=symbol, winning_line=winning_line)
++    return mid
++
+*** End of patch

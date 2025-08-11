@@ -131,7 +131,7 @@ def display_dm_thread(profile, peer_id: str, udp):
     for msg in thread:
         timestamp = msg.get("TIMESTAMP")
         who = "You" if msg.get("FROM") == profile.user_id else peer_id
-        questionary.print(f"[{timestamp}] {who}: {msg.get("CONTENT")}")
+        questionary.print(f"[{timestamp}] {who}: {msg.get('CONTENT')}")
 
     action = questionary.select(
             "Choose an action:",
@@ -360,7 +360,7 @@ def select_peer(local_profile):
             clear_screen()
             questionary.print("📡 Live Peer View (auto-refreshes every 3s)", style="bold")
             peers = get_peers(active_within=300)
-            peers = [p for p in peers]
+            peers = [p for p in peers if local_profile.user_id != p.user_id]
 
             if not peers:
                 if not waiting:
@@ -443,8 +443,6 @@ def display_feed(profile=None, udp=None):
         send_like(profile, selected, udp, action="LIKE" if action == "Like" else "UNLIKE")
         questionary.print("✅ Done.", style="fg:green")
         wait_for_enter()
-        questionary.print(f"📭 Post from {post.get("USER_ID")}: {post.get("CONTENT")}")
-    wait_for_enter()
 
 def print_verbose():
     while True:

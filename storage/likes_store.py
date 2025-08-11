@@ -28,3 +28,6 @@ def get_like_count(poster_user_id: str, post_ts: int):
 def get_likers(poster_user_id: str, post_ts: int):
     return list(likes.get(key(poster_user_id, post_ts), set()))
 
+def has_liked(poster_user_id: str, post_ts: int, liker_user_id: str):
+    return liker_user_id in likes.get((poster_user_id, int(post_ts)), set())
+

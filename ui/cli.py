@@ -19,12 +19,14 @@ from utils.time_utils import wait_for_enter
 from models.file_transfer import FileTransfer
 from models.file_transfer import FileTransferResponder
 from storage.post_store import get_recent_posts
-from storage.likes_store import get_like_count
+from storage.likes_store import get_like_count, has_liked, add_like, remove_like
 from senders.like_unlike import send_like
 from storage.dm_store import get_thread
 from storage.peer_directory import get_peer
 from senders.post_broadcast import send_post
 from senders.direct_message_unicast import send_dm
+from senders.follow_unicast import follow_user, unfollow_user
+from storage.user_followers import is_following, is_follower, get_followers, get_following
 
 
 # ===============================
@@ -407,6 +409,21 @@ def launch_main_menu(profile: Profile, udp):
 
                 elif choice == "DM Thread":
                     display_dm_thread(profile, selected.user_id, udp)
+                
+                elif choice == "Follow":
+                    if is_following(selected.user_id):
+                        questionary.print("✅ You already follow this user.", style="fg:green")
+                    else:
+                        follow_user(profile, selected, udp)
+
+                elif choice == "Unfollow":
+                    if not is_following(selected.user_id):
+                        questionary.print("ℹ️ You don't follow this user.", style="fg:yellow")
+                    else:
+                        unfollow_user(profile, selected, udp)
+
+                elif choice == "View Relationship":
+                    show_peer_relationship(selected)
 
         elif choice == "Settings: Change Post TTL":
             new_post_ttl = questionary.text(f"Enter new Post TTL in seconds (current {config.token_ttl_post}): ").ask()
@@ -490,6 +507,7 @@ def peer_menu():
                 "DM Thread",
                 "Follow",
                 "Unfollow",
+                "View Relationship",
                 "Send File",
                 "↩ Return to menu"
             ]
@@ -523,14 +541,34 @@ def display_feed(profile=None, udp=None):
     if selected == "↩ Back" or selected is None:
         return
     
+    post_author = selected.get("USER_ID")
+    post_ts = int(selected.get("TIMESTAMP", 0))
+    
     action = questionary.select("Choose an action:", choices=["Like", "Unlike", "↩ Back"]).ask()
     if action in ("Like", "Unlike"):
         if profile is None or udp is None:
             questionary.print("⚠️ Internal: missing profile/udp in display_feed.", style="fg:red")
             wait_for_enter()
             return
-        send_like(profile, selected, udp, action="LIKE" if action == "Like" else "UNLIKE")
-        questionary.print("✅ Done.", style="fg:green")
+        
+        if action == "Like":
+            if has_liked(post_author, post_ts, profile.user_id):
+                questionary.print("✅ You already liked this post.", style="fg:green")
+            else:
+                add_like(post_author, post_ts, profile.user_id)
+                from senders.like_unlike import send_like
+                send_like(profile, selected, udp, action="LIKE")
+                questionary.print("❤️ Liked.", style="fg:green")
+
+        elif action == "Unlike":
+            if not has_liked(post_author, post_ts, profile.user_id):
+                questionary.print("ℹ️ You haven’t liked this post yet.", style="fg:yellow")
+            else:
+                remove_like(post_author, post_ts, profile.user_id)
+                from senders.like_unlike import send_like
+                send_like(profile, selected, udp, action="UNLIKE")
+                questionary.print("💤 Unliked.", style="fg:green")
+
         wait_for_enter()
 
 def revoke_cli(local_profile, udp_listener):
@@ -588,3 +626,15 @@ def print_notifs():
             break
 
         time.sleep(10)
+
+def show_peer_relationship(peer):
+    you_follow = is_following(peer.user_id)
+    they_follow = is_follower(peer.user_id)
+
+    lines = [
+        f"👤 Peer: {peer.user_id}",
+        f"• You follow them: {'✅ Yes' if you_follow else '❌ No'}",
+        f"• They follow you: {'✅ Yes' if they_follow else '❌ No'}",
+    ]
+    questionary.print("\n".join(lines), style="bold")
+    wait_for_enter()

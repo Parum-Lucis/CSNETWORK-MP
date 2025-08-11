@@ -8,7 +8,7 @@ def parse_user_id_ip(user_id_str: str):
     name, ip = user_id_str.split("@", 1)
     return name, ip
 
-def handle_post(msg, addr):
+def handle_post(msg, addr, local_user):
     poster_id = msg.get("USER_ID")
     token = msg.get("TOKEN")
     content = msg.get("CONTENT")
@@ -31,10 +31,10 @@ def handle_post(msg, addr):
     #     print(f"\n\nPoster IP mismatch\n\n")
     #     return
     
-    # if not is_follower(poster_id):
-    #     verbose_log("DROP!", f"Expired/Rejected post uploaded by {poster_id} (Not a Follower): {content} - {current_unix_time()}")
-    #     notif_log(f"Receiver is not a follower of Sender")
-    #     return
+    if not is_follower(poster_id) and poster_id != local_user.user_id:
+        verbose_log("DROP!", f"Expired/Rejected post uploaded by {poster_id} (Not a Follower): {content} - {current_unix_time()}")
+        notif_log(f"Receiver is not a follower of Sender")
+        return
     
     status = save_post(msg)
 

@@ -18,6 +18,8 @@ from utils.time_utils import wait_for_enter
 from models.file_transfer import FileTransfer
 from models.file_transfer import FileTransferResponder
 from storage.post_store import get_recent_posts
+from storage.likes_store import get_like_count
+from senders.like_unlike import send_like
 from storage.dm_store import get_thread
 from storage.peer_directory import get_peer
 from senders.post_broadcast import send_post
@@ -151,7 +153,7 @@ def display_dm_thread(profile, peer_id: str, udp):
             wait_for_enter()
 
     clear_screen()
-    
+
 def group_menu(local_profile, udp_listener):
     """
     Main Group Menu
@@ -260,6 +262,8 @@ def launch_main_menu(profile: Profile, udp):
         # ✅ Flush background logs
         flush_pending_logs()
 
+        questionary.print(f"User: {profile.user_id}", style="bold fg:yellow")
+
         # ✅ Process pending file offers before showing menu
         while not pending_file_offers.empty():
             msg, addr = pending_file_offers.get()
@@ -340,7 +344,7 @@ def launch_main_menu(profile: Profile, udp):
             send_post(profile, content, udp)
 
         elif choice == "Check Feed":
-            display_feed()
+            display_feed(profile, udp)
 
         elif choice == "Groups":
             group_menu(profile, udp)
@@ -414,16 +418,39 @@ def peer_menu():
             return None
         return choice
     
-def display_feed():
+def display_feed(profile=None, udp=None):
     posts = get_recent_posts()
     if not posts:
         questionary.print("📭 No posts to show.", style="fg:yellow")
         wait_for_enter()
         return
-
+    
+    choices = []
     for post in posts:
-        questionary.print(f"📭 Post from {post.get('USER_ID')}: {post.get('CONTENT')}")
-    wait_for_enter()
+        user_id = post.get("USER_ID", "?")
+        timestamp  = int(post.get("TIMESTAMP", 0))
+        content = (post.get("CONTENT") or "").strip().replace("\n", " ")
+        if len(content) > 70:
+            content = content[:67] + "..."
+        count = get_like_count(user_id, timestamp)
+        title = f"{user_id} • {timestamp}\n   {content}  ❤️ {count}"
+        choices.append(questionary.Choice(title=title, value=post))
+
+    choices.append("↩ Back")
+
+    selected = questionary.select("📰 Feed — pick a post:", choices=choices).ask()
+    if selected == "↩ Back" or selected is None:
+        return
+    
+    action = questionary.select("Choose an action:", choices=["Like", "Unlike", "↩ Back"]).ask()
+    if action in ("Like", "Unlike"):
+        if profile is None or udp is None:
+            questionary.print("⚠️ Internal: missing profile/udp in display_feed.", style="fg:red")
+            wait_for_enter()
+            return
+        send_like(profile, selected, udp, action="LIKE" if action == "Like" else "UNLIKE")
+        questionary.print("✅ Done.", style="fg:green")
+        wait_for_enter()
 
 def print_verbose():
     while True:
@@ -435,7 +462,7 @@ def print_verbose():
 
         try:
             time.sleep(10)
-            clear_screen()
+            # clear_screen()
         except KeyboardInterrupt:
             # Return to menu when Ctrl+C is pressed
             clear_screen()

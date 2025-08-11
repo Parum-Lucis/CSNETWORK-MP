@@ -26,3 +26,15 @@ def get_recent_posts(limit=20):
             break
 
     return valid_posts
+
+def find_post(poster_user_id: str, post_ts: int):
+    for p in posts:
+        try:
+            if p.get("USER_ID" == poster_user_id and int(p.get("TIMESTAMP", 0)) == int(post_ts)):
+                return p
+        except Exception:
+            pass
+    return None
+
+def has_post(poster_user_id: str, post_ts: int):
+    return find_post(poster_user_id, post_ts) is not None

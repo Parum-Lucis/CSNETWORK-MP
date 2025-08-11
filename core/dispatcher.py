@@ -61,9 +61,11 @@ class Dispatcher:
         msg = parse_message(raw_message)
         msg_type = msg.get("TYPE")
 
+        """
         if not verify_sender_ip(msg, addr):
             verbose_log("DROP!", f"IP mismatch: FROM={msg.get('FROM')} actual={addr[0]}")
             return
+        """
 
         if msg_type == "PROFILE":
             handle_profile(msg, addr)

@@ -14,6 +14,7 @@ def send_post(profile, content: str, udp):
         "USER_ID": profile.user_id,
         "CONTENT": content,
         "TTL": config.token_ttl_post,
+        "TIMESTAMP": current_unix_time(),
         "MESSAGE_ID": message_id,
         "TOKEN": token
     }

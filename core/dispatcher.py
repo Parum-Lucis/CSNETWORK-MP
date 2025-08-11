@@ -3,6 +3,7 @@ from handlers.group_handler import handle_group_message, handle_group_create, ha
 from handlers.ping_handler import handle_ping
 from handlers.file_handler import handle_file
 from handlers.profile_handler import handle_profile
+from handlers.like_handler import handle_like
 from handlers.post_handler import handle_post
 from handlers.direct_message_handler import handle_dm
 from utils.network_utils import verify_sender_ip
@@ -83,6 +84,8 @@ class Dispatcher:
             handle_group_message(msg, addr)
         elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
             handle_file(msg, addr, self.listener, self.local_profile)
+        elif msg_type == "LIKE":
+            handle_like(msg, addr)
         else:
             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
 

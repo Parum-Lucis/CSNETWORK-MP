@@ -2,7 +2,7 @@
 
 # User Datagram Protocol Constants
 PORT = 50999              # UDP port for LSNP communication
-BROADCAST_INTERVAL = 300  # Seconds between PROFILE broadcasts; 5 MINUTES
+BROADCAST_INTERVAL = 30  # Seconds between PROFILE broadcasts; 5 MINUTES
 BUFFER_SIZE = 1024        # Max bytes to receive in a UDP packet; 1 KB
 
 # Token defaults; 

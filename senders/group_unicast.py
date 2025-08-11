@@ -84,7 +84,6 @@ def send_group_update(profile, group_id, udp_listener, add=None, remove=None):
         else:
             verbose_log("WARN", f"Member {member_id} is offline; skipping send.")
 
-
 def send_group_message(profile, group_id, content, udp_listener):
     """
     Sends GROUP_MESSAGE to all members except the sender.

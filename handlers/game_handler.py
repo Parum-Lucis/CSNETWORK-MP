@@ -1,5 +1,8 @@
 import time
 import questionary
+
+from core import ack_registry
+from core.ack_registry import register_ack
 from core.token_validator import validate_token
 from utils.printer import verbose_log, notif_log, clear_screen
 from queue import Queue
@@ -22,7 +25,6 @@ class GameInviteResponder:
         }
         msg = "\n".join(f"{k}: {v}" for k, v in ack.items()) + "\n\n"
         self.listener.send_unicast(msg, to_ip)
-
 
 def handle_invite(msg, addr, udp_listener, local_profile):
     """
@@ -51,19 +53,22 @@ def process_game_invite(msg, addr, listener, local_profile):
     ).ask()
 
     if accept:
-        ack = {
-            "TYPE": "ACK",
-            "MESSAGE_ID": message_id,
-            "STATUS": "ACCEPTED"
-        }
-        ack_msg = "\n".join(f"{k}: {v}" for k, v in ack.items()) + "\n\n"
-        listener.send_unicast(ack_msg, addr[0])
-        notif_log(f"✅ You accepted the invite from {from_user}")
+        # Define what to do when ack is received
+        def on_ack(ack):
+            # Prepare acknowledgment message string from the ack dictionary
+            ack_msg = "\n".join(f"{k}: {v}" for k, v in ack.items()) + "\n\n"
+            listener.send_unicast(ack_msg, addr[0])
+            notif_log(f"✅ You accepted the invite from {from_user}")
+
+        # Register the ack callback with the message_id
+        register_ack(message_id, on_ack)
+
         from models import game_session
-        game_session.start_game(local_profile, listener, game_id, msg["FROM"], symbol, first_turn=False)
+        game_session.start_game(local_profile, listener, game_id, from_user, symbol, first_turn=False)
 
     else:
         notif_log(f"❌ You declined the invite from {from_user}")
+
 
 def handle_move(msg, addr, listener, local_profile):
     position = int(msg.get("POSITION"))

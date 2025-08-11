@@ -1,3 +1,4 @@
+from handlers import game_handler
 from handlers.ack_handler import handle_ack
 from handlers.group_handler import handle_group_message, handle_group_create, handle_group_update
 from handlers.ping_handler import handle_ping
@@ -43,7 +44,7 @@ class Dispatcher:
         """
         self.listener = listener
         self.local_profile = local_profile
-        self.game_handler = GameHandler(self.listener, self.local_profile)
+        #self.game_handler = GameHandler(self.listener, self.local_profile)
 
     def handle(self, raw_message: str, addr):
         """
@@ -87,11 +88,9 @@ class Dispatcher:
         elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
             handle_file(msg, addr, self.listener, self.local_profile)
         elif msg_type == "TICTACTOE_INVITE":
-            self.game_handler.handle_invite(msg, addr)
+            game_handler.handle_invite(msg, addr)
         elif msg_type == "TICTACTOE_MOVE":
-            self.game_handler.handle_move(msg, addr)
-        elif msg_type == "ACK":
-            self.game_handler.handle_ack(msg, addr)
+            game_handler.handle_move(msg, addr)
         else:
             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
 

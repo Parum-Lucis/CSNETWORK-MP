@@ -70,7 +70,7 @@ class FileTransfer:
                     "FILEID": self.file_id,
                     "CHUNK_INDEX": str(chunk_index),
                     "TOTAL_CHUNKS": str(total_chunks),
-                    "CHUNK_SIZE": str(len(chunk)),  # actual chunk size (may be < self.chunk_size on last chunk)
+                    "CHUNK_SIZE": str(len(chunk)),  # actual chunk size (maybe < self.chunk_size on last chunk)
                     "TOKEN": generate_token(self.from_profile.user_id, 600, "file"),
                     "DATA": encoded_data
                 }

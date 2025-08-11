@@ -258,8 +258,8 @@ def launch_main_menu(profile: Profile, udp):
 
         # Confirm incoming invitez
         while not pending_game_invites.empty():
-            msg, addr, listener = pending_game_invites.get()
-            process_game_invite(msg, addr, listener)
+            msg, addr, listener, local_profile = pending_game_invites.get()
+            process_game_invite(msg, addr, listener, local_profile)
 
         # ✅ Process pending file offers before showing menu
         while not pending_file_offers.empty():

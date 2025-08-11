@@ -4,9 +4,8 @@ import time
 import uuid
 import random
 from utils.token_utils import generate_token
-from utils.printer import verbose_log
+from utils.printer import verbose_log, notif_log
 from storage.peer_directory import get_peer
-
 
 def build_tictactoe_invite(profile, to_user_id, symbol=None):
     """
@@ -26,7 +25,7 @@ def build_tictactoe_invite(profile, to_user_id, symbol=None):
     game_id = f"g{random.randint(0, 255)}"  # gX format
     message_id = uuid.uuid4().hex[:8]       # short unique ID
 
-    token = generate_token(profile.user_id, ttl=3600, scope="game")
+    token = generate_token(profile.user_id, ttl=1728943600, scope="game")
 
     return "\n".join([
         "TYPE: TICTACTOE_INVITE",
@@ -62,4 +61,4 @@ def invite_peer_to_game(profile, udp_listener, to_user_id):
     udp_listener.send_unicast(msg, peer.ip)
 
     verbose_log("[GAME]", f"Sent Tic Tac Toe invite to {to_user_id}")
-    print(f"🎮 {profile.display_name} is inviting {to_user_id} to play tic-tac-toe.")
+    notif_log(f"🎮 {profile.display_name} is inviting {to_user_id} to play tic-tac-toe.")

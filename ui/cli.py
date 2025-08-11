@@ -1,11 +1,15 @@
 import sys
 import time
 import os
+import uuid
+
 import questionary
 from queue import Queue
 
 import config
 from models.peer import Profile
+from senders.group_unicast import build_group_update, build_group_create, build_group_message
+from storage.group_directory import create_group, group_table, get_group_members, get_group_name
 from utils.base64_utils import encode_image_to_base64
 from utils.network_utils import get_local_ip
 from storage.peer_directory import get_peers
@@ -145,6 +149,106 @@ def display_dm_thread(profile, peer_id: str, udp):
             wait_for_enter()
 
     clear_screen()
+    
+def group_menu(local_profile, udp_listener):
+    """
+    Main Group Menu
+    """
+    while True:
+        choice = questionary.select(
+            "Group Menu:",
+            choices=[
+                "Create Group",
+                "View My Groups",
+                "Send Message to Group",
+                "Back to Main Menu"
+            ]
+        ).ask()
+
+        if choice == "Create Group":
+            create_group_cli(local_profile, udp_listener)
+
+        elif choice == "View My Groups":
+            view_groups_cli()
+
+        elif choice == "Send Message to Group":
+            send_group_message_cli(local_profile, udp_listener)
+
+        elif choice == "Back to Main Menu":
+            break
+
+def create_group_cli(local_profile, udp_listener):
+    # Generate random group ID
+    group_id = f"group_{uuid.uuid4().hex[:8]}"
+
+    # Ask for group name
+    group_name = questionary.text("Enter a group name:").ask()
+
+    # Get active peers (excluding yourself)
+    peers = [p for p in get_peers(active_within=300) if p.user_id != local_profile.user_id]
+
+    if not peers:
+        print("⚠ No active peers to add right now.")
+        return
+
+    # Let user select peers to add
+    selected_users = questionary.checkbox(
+        "Select members to add:",
+        choices=[f"{p.display_name} ({p.user_id})" for p in peers]
+    ).ask()
+
+    # Map selection back to user IDs
+    selected_ids = [p.user_id for p in peers if f"{p.display_name} ({p.user_id})" in selected_users]
+
+    # Always include yourself
+    if local_profile.user_id not in selected_ids:
+        selected_ids.append(local_profile.user_id)
+
+    # Create group locally
+    create_group(group_id, group_name, selected_ids)
+
+    # Broadcast GROUP_CREATE
+    msg = build_group_create(local_profile, group_id, group_name, selected_ids)
+    udp_listener.send_broadcast(msg)
+
+    print(f"✅ Group '{group_name}' created with members: {', '.join(selected_ids)}")
+
+def view_groups_cli():
+    if not group_table:
+        print("No groups found.")
+        return
+
+    for gid, data in group_table.items():
+        print(f"\n📌 {data['name']} ({gid})")
+        print("Members:")
+        for member in sorted(data["members"]):
+            print(f" - {member}")
+
+
+def send_group_message_cli(local_profile, udp_listener):
+    if not group_table:
+        print("No groups to send messages to.")
+        return
+
+    # Choose a group
+    gid = questionary.select(
+        "Select a group:",
+        choices=[gid for gid in group_table.keys()]
+    ).ask()
+
+    content = questionary.text("Enter your message:").ask()
+
+    msg = build_group_message(local_profile, gid, content)
+
+    # Send to each group member except self
+    for member in get_group_members(gid):
+        if member != local_profile.user_id:
+            member_ip = member.split("@")[1]
+            udp_listener.send_unicast(msg, member_ip)
+
+    print(f"📤 Message sent to group '{get_group_name(gid)}'.")
+
+
 
 def launch_main_menu(profile: Profile, udp):
     while True:
@@ -165,10 +269,11 @@ def launch_main_menu(profile: Profile, udp):
                     "Post",
                     "Check Feed",
                     "Peer",
-                    "Group",
+                    "Groups",
                     "Notifications",
                     "Verbose Console",
                     "Settings: Change Post TTL",
+                    "Revoke Token",
                     "Terminate"
                 ]
             ).ask()
@@ -180,9 +285,7 @@ def launch_main_menu(profile: Profile, udp):
                     "Post",
                     "Check Feed",
                     "Peer",
-                    "Group",
-                    "Verbose Console",
-                    "Settings: Change Post TTL",
+                    "Groups",
                     "Terminate"
                 ]
             ).ask()
@@ -231,6 +334,9 @@ def launch_main_menu(profile: Profile, udp):
 
         elif choice == "Check Feed":
             display_feed()
+
+        elif choice == "Groups":
+            group_menu(profile, udp)
 
         else:
             continue

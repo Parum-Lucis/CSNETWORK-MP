@@ -9,7 +9,7 @@ from queue import Queue
 import config
 from models.peer import Profile
 from senders.group_unicast import build_group_update, build_group_create, build_group_message
-from storage.group_directory import create_group, group_table, get_group_members, get_group_name
+from storage.group_directory import create_group, group_table, get_group_members, get_group_name, update_group_members
 from utils.base64_utils import encode_image_to_base64
 from utils.network_utils import get_local_ip
 from storage.peer_directory import get_peers
@@ -163,6 +163,7 @@ def group_menu(local_profile, udp_listener):
             "Group Menu:",
             choices=[
                 "Create Group",
+                "Update Group",
                 "View My Groups",
                 "Send Message to Group",
                 "Back to Main Menu"
@@ -171,7 +172,10 @@ def group_menu(local_profile, udp_listener):
 
         if choice == "Create Group":
             create_group_cli(local_profile, udp_listener)
-
+        
+        elif choice == "Update Group":
+            update_group_cli(local_profile, udp_listener)
+        
         elif choice == "View My Groups":
             view_groups_cli()
 
@@ -228,6 +232,68 @@ def view_groups_cli():
         for member in sorted(data["members"]):
             print(f" - {member}")
 
+def update_group_cli(local_profile, udp_listener):
+    # Get list of existing groups
+    groups = [(gid, get_group_name(gid)) for gid in group_table.keys()]
+
+    if not groups:
+        print("⚠ No existing groups to update.")
+        return
+
+    # Select which group to update
+    group_choice = questionary.select(
+        "Select a group to update:",
+        choices=[f"{name} ({gid})" for gid, name in groups]
+    ).ask()
+    if not group_choice:
+        print("❌ No group selected.")
+        return
+
+    selected_group_id = next(gid for gid, name in groups if f"{name} ({gid})" == group_choice)
+    selected_group_name = get_group_name(selected_group_id)
+
+    # Current members
+    current_members = get_group_members(selected_group_id)
+
+    # Active peers (excluding yourself)
+    peers = [p for p in get_peers(active_within=300) if p.user_id != local_profile.user_id]
+
+    # ADD
+    add_ids = []
+    add_choices = [f"{p.display_name} ({p.user_id})" for p in peers if p.user_id not in current_members]
+    if add_choices:
+        add_selection = questionary.checkbox("Select members to ADD:", choices=add_choices).ask() or []
+        add_ids = [p.user_id for p in peers if f"{p.display_name} ({p.user_id})" in add_selection]
+    else:
+        print("ℹ No members available to add.")
+
+    # REMOVE
+    remove_ids = []
+    remove_choices = [uid for uid in current_members if uid != local_profile.user_id]
+    if remove_choices:
+        remove_selection = questionary.checkbox("Select members to REMOVE:", choices=remove_choices).ask() or []
+        remove_ids = [uid for uid in current_members if uid in remove_selection]
+    else:
+        print("ℹ No members available to remove.")
+
+    # No changes?
+    if not add_ids and not remove_ids:
+        print("⚠ No changes selected.")
+        return
+
+    # Local update
+    update_group_members(selected_group_id, add=add_ids, remove=remove_ids)
+
+    # Broadcast
+    update_msg = build_group_update(
+        local_profile,
+        selected_group_id,
+        add_ids if add_ids else None,
+        remove_ids if remove_ids else None
+    )
+    udp_listener.send_broadcast(update_msg)
+
+    print(f"✅ Group '{selected_group_name}' updated.")
 
 def send_group_message_cli(local_profile, udp_listener):
     if not group_table:
@@ -235,9 +301,10 @@ def send_group_message_cli(local_profile, udp_listener):
         return
 
     # Choose a group
+    groups = [(gid, get_group_name(gid)) for gid in group_table.keys()]
     gid = questionary.select(
         "Select a group:",
-        choices=[gid for gid in group_table.keys()]
+        choices=[f"{name} ({gid})" for gid, name in groups]
     ).ask()
 
     content = questionary.text("Enter your message:").ask()
@@ -251,8 +318,6 @@ def send_group_message_cli(local_profile, udp_listener):
             udp_listener.send_unicast(msg, member_ip)
 
     print(f"📤 Message sent to group '{get_group_name(gid)}'.")
-
-
 
 def launch_main_menu(profile: Profile, udp):
     while True:

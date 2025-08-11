@@ -257,6 +257,8 @@ def launch_main_menu(profile: Profile, udp):
         # ✅ Flush background logs
         flush_pending_logs()
 
+        questionary.print(f"User: {profile.user_id}", style="bold fg:yellow")
+
         # ✅ Process pending file offers before showing menu
         while not pending_file_offers.empty():
             msg, addr = pending_file_offers.get()
@@ -454,7 +456,7 @@ def print_verbose():
 
         try:
             time.sleep(10)
-            clear_screen()
+            # clear_screen()
         except KeyboardInterrupt:
             # Return to menu when Ctrl+C is pressed
             clear_screen()

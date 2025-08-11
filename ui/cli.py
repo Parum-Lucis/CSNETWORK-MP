@@ -129,7 +129,7 @@ def display_dm_thread(profile, peer_id: str, udp):
     for msg in thread:
         timestamp = msg.get("TIMESTAMP")
         who = "You" if msg.get("FROM") == profile.user_id else peer_id
-        questionary.print(f"[{timestamp}] {who}: {msg.get("CONTENT")}")
+        questionary.print(f"[{timestamp}] {who}: {msg.get('CONTENT')}")
 
     action = questionary.select(
             "Choose an action:",
@@ -416,7 +416,7 @@ def display_feed():
         return
 
     for post in posts:
-        questionary.print(f"📭 Post from {post.get("USER_ID")}: {post.get("CONTENT")}")
+        questionary.print(f"📭 Post from {post.get('USER_ID')}: {post.get('CONTENT')}")
     wait_for_enter()
 
 def print_verbose():

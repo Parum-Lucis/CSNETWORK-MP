@@ -111,7 +111,8 @@ Once inside the main menu, you can traverse via arrow keys/WASD and enter to int
 - Revoke Token (enter token details to revoke)
 - Terminate (exit)
 
-
+### Important Notes
+For Non-MAC Users, remove the line "self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)"
 
 
 

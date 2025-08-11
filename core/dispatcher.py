@@ -1,10 +1,11 @@
 from handlers.ack_handler import handle_ack
-from handlers.group_handler import handle_group_message, handle_group_create
+from handlers.group_handler import handle_group_message, handle_group_create, handle_group_update
 from handlers.ping_handler import handle_ping
 from handlers.file_handler import handle_file
 from handlers.profile_handler import handle_profile
 from handlers.post_handler import handle_post
 from handlers.direct_message_handler import handle_dm
+from utils.network_utils import verify_sender_ip
 from utils.printer import verbose_log
 
 def parse_message(message: str) -> dict:
@@ -60,6 +61,10 @@ class Dispatcher:
         msg = parse_message(raw_message)
         msg_type = msg.get("TYPE")
 
+        if not verify_sender_ip(msg, addr):
+            verbose_log("DROP!", f"IP mismatch: FROM={msg.get('FROM')} actual={addr[0]}")
+            return
+
         if msg_type == "PROFILE":
             handle_profile(msg, addr)
         elif msg_type == "POST":
@@ -72,10 +77,8 @@ class Dispatcher:
             handle_ping(msg, addr)
         elif msg_type == "GROUP_CREATE":
             handle_group_create(msg, addr)
-        # elif msg_type == "GROUP_JOIN":
-        #     handle_group_join(msg, addr)
-        # elif msg_type == "GROUP_LEAVE":
-        #     handle_group_leave(msg, addr)
+        elif msg_type == "GROUP_JOIN":
+            handle_group_update(msg, addr)
         elif msg_type == "GROUP_MESSAGE":
             handle_group_message(msg, addr)
         elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):

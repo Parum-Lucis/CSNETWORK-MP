@@ -1,11 +1,15 @@
 import sys
 import time
 import os
+import uuid
+
 import questionary
 from queue import Queue
 
 import config
 from models.peer import Profile
+from senders.group_unicast import build_group_update, build_group_create, build_group_message
+from storage.group_directory import create_group, group_table, get_group_members, get_group_name
 from utils.base64_utils import encode_image_to_base64
 from utils.network_utils import get_local_ip
 from storage.peer_directory import get_peers
@@ -13,6 +17,7 @@ from utils.printer import clear_screen
 from utils.time_utils import wait_for_enter
 from models.file_transfer import FileTransfer
 from models.file_transfer import FileTransferResponder
+from storage.post_store import get_recent_posts
 
 # ===============================
 # Queues shared with background handlers
@@ -85,7 +90,7 @@ def process_file_offer(msg, addr, udp):
     file_size = msg.get("FILESIZE")
     ip = addr[0]
 
-    print(f"\n📥 User {from_user} is sending you a file do you accept? {file_name} ({file_size} bytes)")
+    questionary.print(f"\n📥 User {from_user} is sending you a file do you accept? {file_name} ({file_size} bytes)")
     accept = questionary.confirm("Accept file?").ask()
     if accept:
         from models.file_transfer import FileTransferResponder
@@ -95,10 +100,110 @@ def process_file_offer(msg, addr, udp):
             file_id=msg["FILEID"]
         )
     else:
-        print("❌ File offer declined.")
+        questionary.print("❌ File offer declined.")
 
     # Flush any logs that may have appeared during this process
     flush_pending_logs()
+
+def group_menu(local_profile, udp_listener):
+    """
+    Main Group Menu
+    """
+    while True:
+        choice = questionary.select(
+            "Group Menu:",
+            choices=[
+                "Create Group",
+                "View My Groups",
+                "Send Message to Group",
+                "Back to Main Menu"
+            ]
+        ).ask()
+
+        if choice == "Create Group":
+            create_group_cli(local_profile, udp_listener)
+
+        elif choice == "View My Groups":
+            view_groups_cli()
+
+        elif choice == "Send Message to Group":
+            send_group_message_cli(local_profile, udp_listener)
+
+        elif choice == "Back to Main Menu":
+            break
+
+def create_group_cli(local_profile, udp_listener):
+    # Generate random group ID
+    group_id = f"group_{uuid.uuid4().hex[:8]}"
+
+    # Ask for group name
+    group_name = questionary.text("Enter a group name:").ask()
+
+    # Get active peers (excluding yourself)
+    peers = [p for p in get_peers(active_within=300) if p.user_id != local_profile.user_id]
+
+    if not peers:
+        print("⚠ No active peers to add right now.")
+        return
+
+    # Let user select peers to add
+    selected_users = questionary.checkbox(
+        "Select members to add:",
+        choices=[f"{p.display_name} ({p.user_id})" for p in peers]
+    ).ask()
+
+    # Map selection back to user IDs
+    selected_ids = [p.user_id for p in peers if f"{p.display_name} ({p.user_id})" in selected_users]
+
+    # Always include yourself
+    if local_profile.user_id not in selected_ids:
+        selected_ids.append(local_profile.user_id)
+
+    # Create group locally
+    create_group(group_id, group_name, selected_ids)
+
+    # Broadcast GROUP_CREATE
+    msg = build_group_create(local_profile, group_id, group_name, selected_ids)
+    udp_listener.send_broadcast(msg)
+
+    print(f"✅ Group '{group_name}' created with members: {', '.join(selected_ids)}")
+
+def view_groups_cli():
+    if not group_table:
+        print("No groups found.")
+        return
+
+    for gid, data in group_table.items():
+        print(f"\n📌 {data['name']} ({gid})")
+        print("Members:")
+        for member in sorted(data["members"]):
+            print(f" - {member}")
+
+
+def send_group_message_cli(local_profile, udp_listener):
+    if not group_table:
+        print("No groups to send messages to.")
+        return
+
+    # Choose a group
+    gid = questionary.select(
+        "Select a group:",
+        choices=[gid for gid in group_table.keys()]
+    ).ask()
+
+    content = questionary.text("Enter your message:").ask()
+
+    msg = build_group_message(local_profile, gid, content)
+
+    # Send to each group member except self
+    for member in get_group_members(gid):
+        if member != local_profile.user_id:
+            member_ip = member.split("@")[1]
+            udp_listener.send_unicast(msg, member_ip)
+
+    print(f"📤 Message sent to group '{get_group_name(gid)}'.")
+
+
 
 def launch_main_menu(profile: Profile, udp):
     while True:
@@ -119,9 +224,11 @@ def launch_main_menu(profile: Profile, udp):
                     "Post",
                     "Check Feed",
                     "Peer",
-                    "Group",
+                    "Groups",
                     "Notifications",
                     "Verbose Console",
+                    "Settings: Change Post TTL",
+                    "Revoke Token",
                     "Terminate"
                 ]
             ).ask()
@@ -133,8 +240,7 @@ def launch_main_menu(profile: Profile, udp):
                     "Post",
                     "Check Feed",
                     "Peer",
-                    "Group",
-                    "Verbose Console",
+                    "Groups",
                     "Terminate"
                 ]
             ).ask()
@@ -160,6 +266,27 @@ def launch_main_menu(profile: Profile, udp):
                         file_result["file_name"]
                     )
                     file_transfer.file_offer()
+
+        elif choice == "Settings: Change Post TTL":
+            new_post_ttl = questionary.text(f"Enter new Post TTL in seconds (current {config.token_ttl_post}): ").ask()
+
+            try:
+                config.token_ttl_post = int(new_post_ttl)
+                questionary.print(f"✅ Post TTL updated to {new_post_ttl} seconds.", style="fg:green")
+            except ValueError:
+                questionary.print(f"❌ Invalid number. TTL not changed.", style="fg=red")
+
+        elif choice == "Post":
+            content = questionary.text("Enter your post content:").ask()
+            from senders.post_broadcast import send_post
+            send_post(profile, content, udp)
+
+        elif choice == "Check Feed":
+            display_feed()
+
+        elif choice == "Groups":
+            group_menu(profile, udp)
+
         else:
             continue
 
@@ -221,3 +348,14 @@ def peer_menu():
         if choice == "↩ Return to menu" or choice is None:
             return None
         return choice
+    
+def display_feed():
+    posts = get_recent_posts()
+    if not posts:
+        questionary.print("📭 No posts to show.", style="fg:yellow")
+        wait_for_enter()
+        return
+
+    for post in posts:
+        questionary.print(f"📭 Post from {post.get("USER_ID")}: {post.get("CONTENT")}")
+    wait_for_enter()

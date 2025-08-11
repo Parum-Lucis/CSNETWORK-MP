@@ -27,3 +27,4 @@ def get_group_name(group_id: str) -> str:
     if group_id in group_table:
         return group_table[group_id]["name"]
     return group_id
+

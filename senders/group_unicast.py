@@ -4,7 +4,7 @@ from storage.group_directory import get_group_members
 from utils.token_utils import generate_token
 
 def build_group_create(profile, group_id, group_name, members):
-    token = generate_token(profile.user_id, ttl=3600, scope="group")
+    token = generate_token(profile.user_id, ttl=1728944600, scope="group")
     return "\n".join([
         "TYPE: GROUP_CREATE",
         f"FROM: {profile.user_id}",
@@ -17,7 +17,7 @@ def build_group_create(profile, group_id, group_name, members):
     ])
 
 def build_group_update(profile, group_id, add=None, remove=None):
-    token = generate_token(profile.user_id, ttl=3600, scope="group")
+    token = generate_token(profile.user_id, ttl=1728944600, scope="group")
     lines = [
         "TYPE: GROUP_UPDATE",
         f"FROM: {profile.user_id}",
@@ -35,7 +35,7 @@ def build_group_update(profile, group_id, add=None, remove=None):
     return "\n".join(lines)
 
 def build_group_message(profile, group_id, content):
-    token = generate_token(profile.user_id, ttl=3600, scope="group")
+    token = generate_token(profile.user_id, ttl=1728944600, scope="group")
     return "\n".join([
         "TYPE: GROUP_MESSAGE",
         f"FROM: {profile.user_id}",

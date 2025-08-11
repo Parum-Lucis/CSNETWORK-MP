@@ -88,9 +88,9 @@ class Dispatcher:
         elif msg_type in ("FILE_OFFER", "FILE_CHUNK", "FILE_RECEIVED"):
             handle_file(msg, addr, self.listener, self.local_profile)
         elif msg_type == "TICTACTOE_INVITE":
-            game_handler.handle_invite(msg, addr)
+            game_handler.handle_invite(msg, addr, self.listener, self.local_profile)
         elif msg_type == "TICTACTOE_MOVE":
-            game_handler.handle_move(msg, addr)
+            game_handler.handle_move(msg, addr, self.listener, self.local_profile)
         else:
             verbose_log("WARN", f"Unknown TYPE: {msg_type}")
 

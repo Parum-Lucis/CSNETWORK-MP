@@ -53,22 +53,24 @@ def process_game_invite(msg, addr, listener, local_profile):
     ).ask()
 
     if accept:
-        # Define what to do when ack is received
+        # Define what to do when ACK response is received
         def on_ack(ack):
-            # Prepare acknowledgment message string from the ack dictionary
             ack_msg = "\n".join(f"{k}: {v}" for k, v in ack.items()) + "\n\n"
             listener.send_unicast(ack_msg, addr[0])
             notif_log(f"✅ You accepted the invite from {from_user}")
 
-        # Register the ack callback with the message_id
+        # Register the ACK callback by message_id
         register_ack(message_id, on_ack)
+
+        # Now actually send the ACK back to the inviter
+        ack_responder = GameInviteResponder(listener)
+        ack_responder.send_ack(addr[0], message_id, status="ACCEPTED")
 
         from models import game_session
         game_session.start_game(local_profile, listener, game_id, from_user, symbol, first_turn=False)
 
     else:
         notif_log(f"❌ You declined the invite from {from_user}")
-
 
 def handle_move(msg, addr, listener, local_profile):
     position = int(msg.get("POSITION"))

@@ -432,7 +432,7 @@ def display_feed():
 
 def print_verbose():
     while True:
-        os.system("cls" if os.name == "nt" else "clear")
+        clear_screen()
         print("=== Verbose Logs ===\n")
         for log in VERBOSE_LOGS:
             print(log)
@@ -440,7 +440,6 @@ def print_verbose():
 
         try:
             time.sleep(10)
-            clear_screen()
         except KeyboardInterrupt:
             # Return to menu when Ctrl+C is pressed
             clear_screen()

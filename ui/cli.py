@@ -262,7 +262,6 @@ def launch_main_menu(profile: Profile, udp):
         # ✅ Flush background logs
         flush_pending_logs()
 
-        questionary.print(f"User: {profile.user_id}", style="bold fg:yellow")
 
         # ✅ Process pending file offers before showing menu
         while not pending_file_offers.empty():

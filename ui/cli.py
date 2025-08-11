@@ -116,7 +116,7 @@ def process_file_offer(msg, addr, udp, local_profile):
             file_id=msg["FILEID"]
         )
     else:
-        print("❌ File offer declined.")
+        questionary.print("❌ File offer declined.")
         # Receiver sends REVOKE to sender
         send_revoke(
             udp_listener=udp,
@@ -214,7 +214,7 @@ def create_group_cli(local_profile, udp_listener):
     peers = [p for p in get_peers(active_within=300) if p.user_id != local_profile.user_id]
 
     if not peers:
-        print("⚠ No active peers to add right now.")
+        questionary.print("⚠ No active peers to add right now.")
         return
 
     # Let user select peers to add
@@ -237,25 +237,25 @@ def create_group_cli(local_profile, udp_listener):
     msg = build_group_create(local_profile, group_id, group_name, selected_ids)
     udp_listener.send_broadcast(msg)
 
-    print(f"✅ Group '{group_name}' created with members: {', '.join(selected_ids)}")
+    questionary.print(f"✅ Group '{group_name}' created with members: {', '.join(selected_ids)}")
 
 def view_groups_cli():
     if not group_table:
-        print("No groups found.")
+        questionary.print("No groups found.")
         return
 
     for gid, data in group_table.items():
-        print(f"\n📌 {data['name']} ({gid})")
-        print("Members:")
+        questionary.print(f"\n📌 {data['name']} ({gid})")
+        questionary.print("Members:")
         for member in sorted(data["members"]):
-            print(f" - {member}")
+            questionary.print(f" - {member}")
 
 def update_group_cli(local_profile, udp_listener):
     # Get list of existing groups
     groups = [(gid, get_group_name(gid)) for gid in group_table.keys()]
 
     if not groups:
-        print("⚠ No existing groups to update.")
+        questionary.print("⚠ No existing groups to update.")
         return
 
     # Select which group to update
@@ -264,7 +264,7 @@ def update_group_cli(local_profile, udp_listener):
         choices=[f"{name} ({gid})" for gid, name in groups]
     ).ask()
     if not group_choice:
-        print("❌ No group selected.")
+        questionary.print("❌ No group selected.")
         return
 
     selected_group_id = next(gid for gid, name in groups if f"{name} ({gid})" == group_choice)
@@ -283,7 +283,7 @@ def update_group_cli(local_profile, udp_listener):
         add_selection = questionary.checkbox("Select members to ADD:", choices=add_choices).ask() or []
         add_ids = [p.user_id for p in peers if f"{p.display_name} ({p.user_id})" in add_selection]
     else:
-        print("ℹ No members available to add.")
+        questionary.print("ℹ No members available to add.")
 
     # REMOVE
     remove_ids = []
@@ -292,11 +292,11 @@ def update_group_cli(local_profile, udp_listener):
         remove_selection = questionary.checkbox("Select members to REMOVE:", choices=remove_choices).ask() or []
         remove_ids = [uid for uid in current_members if uid in remove_selection]
     else:
-        print("ℹ No members available to remove.")
+        questionary.print("ℹ No members available to remove.")
 
     # No changes?
     if not add_ids and not remove_ids:
-        print("⚠ No changes selected.")
+        questionary.print("⚠ No changes selected.")
         return
 
     # Local update
@@ -311,7 +311,7 @@ def update_group_cli(local_profile, udp_listener):
     )
     udp_listener.send_broadcast(update_msg)
 
-    print(f"✅ Group '{selected_group_name}' updated.")
+    NOTIFICATIONS.append(f"✅ Group '{selected_group_name}' updated.")
 
 def send_group_message_cli(local_profile, udp_listener):
     """
@@ -338,7 +338,7 @@ def send_group_message_cli(local_profile, udp_listener):
 
     send = send_group_message(local_profile, gid, content, udp_listener)
     if send:
-        print(f"📤 Message sent to group '{get_group_name(gid)}'.")
+        NOTIFICATIONS.append(f"📤 Message sent to group '{get_group_name(gid)}'.")
     
 def view_group_messages_cli():
     """
@@ -363,9 +363,9 @@ def view_group_messages_cli():
     if not messages:
         print("📭 No messages in this group yet.")
     else:
-        print(f"=== Messages in '{get_group_name(gid)}' ===")
+        questionary.print(f"=== Messages in '{get_group_name(gid)}' ===")
         for m in messages:
-            print(f"[{m['timestamp']}] {m['sender']}: {m['content']}")
+            questionary.print(f"[{m['timestamp']}] {m['sender']}: {m['content']}")
 
     input("\n🔙 Press Enter to return to the main menu...")
 

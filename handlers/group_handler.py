@@ -8,7 +8,6 @@ from storage.group_directory import (
 )
 from core.token_validator import validate_token
 from utils.printer import NOTIFICATIONS, verbose_log
-from ui.cli import pending_logs
 
 def handle_group_create(msg, addr):
     """
@@ -25,7 +24,7 @@ def handle_group_create(msg, addr):
 
     create_group(group_id, group_name, members)
     if msg.get("FROM") != members[0]:
-        pending_logs.put(f"You’ve been added to {group_name}")
+        NOTIFICATIONS.append(f"You’ve been added to {group_name}")
     verbose_log(
         "INFO",
         f"Group created: {group_id} ({group_name}) with members {members}"
@@ -46,7 +45,7 @@ def handle_group_update(msg, addr):
     remove = msg.get("REMOVE", "").split(",") if msg.get("REMOVE") else None
 
     update_group_members(group_id, add, remove)
-    pending_logs.put(f'The group "{get_group_name(group_id)}" member list was updated.')
+    NOTIFICATIONS.append(f'The group "{get_group_name(group_id)}" member list was updated.')
 
 
 def handle_group_message(msg, addr):
@@ -67,4 +66,4 @@ def handle_group_message(msg, addr):
     store_group_message(group_id, sender, content, timestamp)
 
     # Live print for active session
-    pending_logs.put(f"[{get_group_name(group_id)}] {sender}: {content}")
+    NOTIFICATIONS.append(f"[{get_group_name(group_id)}] {sender}: {content}")

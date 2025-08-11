@@ -70,6 +70,5 @@ def get_group_messages(group_id: str) -> List[Dict]:
     Retrieve all stored messages for a group.
     Returns an empty list if no messages are found.
     """
-    print("Group Messages: ",group_messages)
 
     return group_messages.get(group_id, [])

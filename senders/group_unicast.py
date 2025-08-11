@@ -72,7 +72,7 @@ def send_group_update(profile, group_id, udp_listener, add=None, remove=None):
     """
     members = get_group_members(group_id)
     if not members:
-        print(f"⚠️ [ERROR] Group {group_id} not found.")
+        verbose_log(f"⚠️ [ERROR] Group {group_id} not found.")
         return
 
     message = build_group_update(profile, group_id, add, remove)
@@ -91,7 +91,7 @@ def send_group_message(profile, group_id, content, udp_listener):
     """
     members = get_group_members(group_id)
     if not members:
-        print(f"⚠️ [ERROR] Group {group_id} has no members.")
+        verbose_log(f"⚠️ [ERROR] Group {group_id} has no members.")
         return False
 
     timestamp = int(time.time())

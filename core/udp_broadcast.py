@@ -2,6 +2,7 @@ import socket
 import threading
 from config import BUFFER_SIZE
 from utils.network_utils import get_broadcast_ip, get_local_ip
+from utils.printer import verbose_log
 
 class UDPListener:
     """
@@ -37,7 +38,7 @@ class UDPListener:
                         message = data.decode('utf-8'  , errors='ignore')
                         on_message_callback(message, addr)
                     except Exception as e:
-                        print(f"[Error] UDP receive failed: {e}")
+                        verbose_log(f"[Error] UDP receive failed: {e}")
         thread = threading.Thread(target=listener)
         thread.start()
 

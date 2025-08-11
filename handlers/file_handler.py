@@ -2,7 +2,7 @@ import os
 import base64
 from models.file_transfer import FileTransferResponder
 from ui.cli import flush_pending_logs, pending_file_offers, pending_logs  # import both queues
-
+from utils.printer import NOTIFICATIONS
 file_buffer = {}
 
 def handle_file(msg: dict, addr: tuple, listener, local_profile):
@@ -34,7 +34,7 @@ def handle_file(msg: dict, addr: tuple, listener, local_profile):
 
     elif msg_type == "FILE_CHUNK":
         if file_id not in file_buffer:
-            pending_logs.put("⚠️ Received chunk for unknown file")
+            NOTIFICATIONS.append("⚠️ Received chunk for unknown file")
             return
 
         file_buffer[file_id]["total_chunks"] = int(msg["TOTAL_CHUNKS"])
@@ -46,10 +46,10 @@ def handle_file(msg: dict, addr: tuple, listener, local_profile):
             save_chunks(file_id, file_buffer[file_id], listener)
 
     elif msg_type == "FILE_RECEIVED":
-        pending_logs.put(f"✅ Peer confirmed file {msg.get('FILEID')} was saved (STATUS: {msg.get('STATUS')}).")
+        NOTIFICATIONS.append(f"✅ Peer confirmed file {msg.get('FILEID')} was saved (STATUS: {msg.get('STATUS')}).")
 
     elif msg_type == "ACK":
-        pending_logs.put(f"📨 ACK from {from_user}: {msg['STATUS']} for {msg['MESSAGE_ID']}")
+        NOTIFICATIONS.append(f"📨 ACK from {from_user}: {msg['STATUS']} for {msg['MESSAGE_ID']}")
 
 def save_chunks(file_id, buffer, listener):
     downloads_dir = os.path.join(os.getcwd(), "downloads")
@@ -61,7 +61,7 @@ def save_chunks(file_id, buffer, listener):
             f.write(buffer["chunks"][i])
 
     # Add to log queue
-    pending_logs.put(f"✅ File transfer of {filename} is complete")
+    NOTIFICATIONS.append(f"✅ File transfer of {filename} is complete")
 
     # Send FILE_RECEIVED confirmation
     responder = FileTransferResponder(listener)

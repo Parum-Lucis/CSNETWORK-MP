@@ -1,4 +1,4 @@
-from utils.token_utils import revoke_token
+from core.token_validator import revoke_token
 from utils.printer import verbose_log
 
 

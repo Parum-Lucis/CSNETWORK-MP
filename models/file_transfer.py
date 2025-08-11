@@ -50,7 +50,6 @@ class FileTransfer:
         register_ack(self.file_id, self.file_transmit)
        
 
-        # TODO Verbose logs
     def file_transmit(self):
         """
         TODO documentation

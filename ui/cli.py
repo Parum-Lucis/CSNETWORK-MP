@@ -9,6 +9,7 @@ from queue import Queue
 import config
 from models.peer import Profile
 from senders.group_unicast import build_group_update, build_group_create, build_group_message
+from senders.revoke_sender import send_revoke
 from storage.group_directory import create_group, group_table, get_group_members, get_group_name, update_group_members
 from utils.base64_utils import encode_image_to_base64
 from utils.network_utils import get_local_ip
@@ -88,29 +89,40 @@ def flush_pending_logs():
         log = pending_logs.get()
         questionary.print(log, style="fg:yellow")
 
-def process_file_offer(msg, addr, udp):
+def process_file_offer(msg, addr, udp, local_profile):
     """
     Handles a pending file offer from the queue.
     """
-    from_user = msg.get("FROM")
+    from_user_id = msg.get("FROM")
+    to_user_id = msg.get("TO")
     file_name = msg.get("FILENAME")
     file_size = msg.get("FILESIZE")
-    ip = addr[0]
+    sender_ip = addr[0]
 
-    print(f"\n📥 User {from_user} is sending you a file do you accept? {file_name} ({file_size} bytes)")
+    print(f"\n📥 User {from_user_id} is sending you a file. "
+          f"Do you accept? {file_name} ({file_size} bytes)")
+
     accept = questionary.confirm("Accept file?").ask()
     if accept:
         from models.file_transfer import FileTransferResponder
         responder = FileTransferResponder(udp)
         responder.accept_file_offer(
-            to_ip=ip,
+            to_ip=sender_ip,
             file_id=msg["FILEID"]
         )
     else:
         print("❌ File offer declined.")
+        # Receiver sends REVOKE to sender
+        send_revoke(
+            udp_listener=udp,
+            from_profile=local_profile,    # Must be the full profile object
+            token=msg.get("TOKEN"),
+            target_ip=sender_ip
+        )
 
     # Flush any logs that may have appeared during this process
     flush_pending_logs()
+
 
 def find_peer_by_user_id(user_id: str):
     peers = get_peers(active_within=300)
@@ -327,7 +339,7 @@ def launch_main_menu(profile: Profile, udp):
         # ✅ Process pending file offers before showing menu
         while not pending_file_offers.empty():
             msg, addr = pending_file_offers.get()
-            process_file_offer(msg, addr, udp)
+            process_file_offer(msg, addr, udp, profile)
 
         console = "(Verbose ON)" if config.VERBOSE else ""
 
@@ -411,6 +423,9 @@ def launch_main_menu(profile: Profile, udp):
 
         elif choice == "Verbose Console":
             print_verbose()
+
+        elif choice == "Revoke Token":
+            revoke_cli(profile, udp)
 
         elif choice == "Notifications":
             print_notifs()
@@ -511,6 +526,22 @@ def display_feed(profile=None, udp=None):
         send_like(profile, selected, udp, action="LIKE" if action == "Like" else "UNLIKE")
         questionary.print("✅ Done.", style="fg:green")
         wait_for_enter()
+
+def revoke_cli(local_profile, udp_listener):
+    """
+    CLI function to manually revoke a token.
+
+    Args:
+        local_profile: Profile of the local user.
+        udp_listener: UDP listener instance for sending messages.
+    """
+    token = questionary.text("Enter token to revoke:").ask()
+    if not token:
+        print("❌ No token entered.")
+        return
+
+    send_revoke(udp_listener, local_profile, token)
+    print(f"✅ Token revoked: {token}")
 
 def print_verbose():
     while True:

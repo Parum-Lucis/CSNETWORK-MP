@@ -398,6 +398,7 @@ def launch_main_menu(profile: Profile, udp):
                     "Verbose Console",
                     "Settings: Change Post TTL",
                     "Revoke Token",
+                    "Refresh",
                     "Terminate"
                 ]
             ).ask()
@@ -412,6 +413,7 @@ def launch_main_menu(profile: Profile, udp):
                     "Groups",
                     "Notifications",
                     "Settings: Change Post TTL",
+                    "Refresh",
                     "Terminate"
                 ]
             ).ask()
@@ -473,7 +475,8 @@ def launch_main_menu(profile: Profile, udp):
 
         elif choice == "Notifications":
             print_notifs()
-
+        elif choice == "Refresh":
+            continue
         else:
             continue
 

@@ -27,10 +27,10 @@ def send_like(profile, post: dict, udp, action: str = "LIKE"):
 
     if action == "LIKE":
         add_like(to_user, int(post_ts), profile.user_id)
-        verbose_log("LIKE", f"{msg.get("FROM")} Liked post {msg.get("POST_TIMESTAMP")} by {msg.get("TO")} - {current_unix_time()}")
-        notif_log(f"{msg.get("FROM")} Liked post {msg.get("POST_TIMESTAMP")} by {msg.get("TO")}")
+        verbose_log("LIKE", f"{msg.get('FROM')} Liked post {msg.get('POST_TIMESTAMP')} by {msg.get('TO')} - {current_unix_time()}")
+        notif_log(f"{msg.get('FROM')} Liked post {msg.get('POST_TIMESTAMP')} by {msg.get('TO')}")
     else:
         remove_like(to_user, int(post_ts), profile.user_id)
-        verbose_log("LIKE", f"{msg.get("FROM")} Unliked post {msg.get("POST_TIMESTAMP")} by {msg.get("TO")} - {current_unix_time()}")
-        notif_log(f"{msg.get("FROM")} Unliked post {msg.get("POST_TIMESTAMP")} by {msg.get("TO")}")
+        verbose_log("LIKE", f"{msg.get('FROM')} Unliked post {msg.get('POST_TIMESTAMP')} by {msg.get('TO')} - {current_unix_time()}")
+        notif_log(f"{msg.get('FROM')} Unliked post {msg.get('POST_TIMESTAMP')} by {msg.get('TO')}")
 

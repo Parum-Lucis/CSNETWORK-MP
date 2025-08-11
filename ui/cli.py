@@ -72,13 +72,14 @@ def file_form():
         while True:
             file_loc = questionary.text("Enter the file location").ask()
 
-            if os.path.isfile(file_loc):
-                answers["file_location"] = file_loc
-                answers["file_name"] = questionary.text("Enter the file name to use (empty to use the default)").ask()
-                answers["description"] = questionary.text("Enter the file description: ").ask()
-            else:
-                questionary.print("❌ The file entered does not exist.", style="bold fg:red")
-                continue
+            if file_loc:    
+                if os.path.isfile(file_loc):
+                    answers["file_location"] = file_loc
+                    answers["file_name"] = questionary.text("Enter the file name to use (empty to use the default)").ask()
+                    answers["description"] = questionary.text("Enter the file description: ").ask()
+                else:
+                    questionary.print("❌ The file entered does not exist.", style="bold fg:red")
+                    continue
             return answers
     except KeyboardInterrupt:
         return None
@@ -102,6 +103,8 @@ def process_file_offer(msg, addr, udp, local_profile):
     print(f"\n📥 User {from_user_id} is sending you a file. "
           f"Do you accept? {file_name} ({file_size} bytes)")
 
+    clear_screen()
+    questionary.print(f"\n📥 User {from_user} is sending you a file do you accept? {file_name} ({file_size} bytes)")
     accept = questionary.confirm("Accept file?").ask()
     if accept:
         from models.file_transfer import FileTransferResponder
@@ -331,10 +334,12 @@ def send_group_message_cli(local_profile, udp_listener):
 
 def launch_main_menu(profile: Profile, udp):
     while True:
+
+        questionary.print(f"User: {profile.user_id}", style="bold fg:yellow")
+
         # ✅ Flush background logs
         flush_pending_logs()
 
-        questionary.print(f"User: {profile.user_id}", style="bold fg:yellow")
 
         # ✅ Process pending file offers before showing menu
         while not pending_file_offers.empty():
@@ -384,6 +389,7 @@ def launch_main_menu(profile: Profile, udp):
                 choice = peer_menu()
 
                 if choice == "Send File":
+                    clear_screen()
                     file_result = file_form()
                     file_transfer = FileTransfer(
                         profile,
@@ -540,8 +546,11 @@ def revoke_cli(local_profile, udp_listener):
         print("❌ No token entered.")
         return
 
-    send_revoke(udp_listener, local_profile, token)
-    print(f"✅ Token revoked: {token}")
+    revoke = send_revoke(udp_listener, local_profile, token)
+    if revoke:
+        print(f"✅ Token revoked: {token}")
+    else:
+        print(f"❌ Cannot token: {token}")
 
 def print_verbose():
     while True:
@@ -553,7 +562,8 @@ def print_verbose():
 
         try:
             time.sleep(10)
-            # clear_screen()
+            clear_screen()
+            continue
         except KeyboardInterrupt:
             # Return to menu when Ctrl+C is pressed
             clear_screen()

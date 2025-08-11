@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="9924877d-972b-4f4f-95ff-c0c9b368cdb6" name="Changes" comment="renamed folder broadcast to senders since all unicast and broadcast makers are there&#10;&#10;added vibecoded group features">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/dispatcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/dispatcher.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,7 +22,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="6f23866fbcfd31a0fc210cbe6ec69aa82a99cd0b" />
+        <entry key="$PROJECT_DIR$" value="ttt_final" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -252,8 +251,9 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/models/file_transfer.py</url>
-          <option name="timeStamp" value="2" />
+          <url>file://$PROJECT_DIR$/ui/cli.py</url>
+          <line>436</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
